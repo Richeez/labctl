@@ -7,7 +7,7 @@
 run() {
 
     echo
-    echo "LABCTL"
+    echo "$NAME"
     echo
     echo "Version : $VERSION"
     echo

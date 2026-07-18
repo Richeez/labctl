@@ -8,7 +8,7 @@ run() {
 
 cat <<EOF
 
-LABCTL Professional
+LABCTL v$VERSION
 
 Usage:
 

@@ -1,27 +1,40 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # UPDATE MODE
 ###############################################################################
 
 
+
+
+
 run() {
 
     require_root
 
-    banner
+    network_update
 
-    network_service_switch update
-
-    network_service_verify
-
-    verify_dns
-
-    verify_internet
-
-    success "Internet mode ready."
+    info "Internet mode enabled."
 
 }
+
+# run() {
+
+#     require_root
+
+#     banner
+
+#     network_service_switch update
+
+#     network_service_verify
+
+#     verify_dns
+
+#     verify_internet
+
+#     success "Internet mode ready."
+
+# }
 # run() {
 
 #     require_root

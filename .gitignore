@@ -4,6 +4,7 @@ logs/
 
 # Cache
 cache/
+.cache/
 
 # Coverage
 coverage/
@@ -26,9 +27,17 @@ tests/tmp/
 
 # Build
 dist/
+.local/
 
 # Runtime state
 state.json
 
 # Temporary
 tmp/
+*.tmp
+*.swp
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db

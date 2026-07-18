@@ -1,23 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # CONTAIN MODE
 ###############################################################################
 
 
+
+
 run() {
 
     require_root
 
-    banner
+    network_contain
 
-    network_service_switch contain
-
-    network_service_verify
-
-    success "Contain mode ready."
+    info "Contain mode enabled."
 
 }
+
+# run() {
+
+#     require_root
+
+#     banner
+
+#     network_service_switch contain
+
+#     network_service_verify
+
+#     success "Contain mode ready."
+
+# }
 
 # run() {
 

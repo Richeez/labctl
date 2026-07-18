@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # HOST-ONLY LAB MODE
@@ -6,19 +6,30 @@
 
 
 
+
 run() {
 
     require_root
 
-    banner
+    network_lab
 
-    network_service_switch lab
-
-    network_service_verify
-
-    success "Host-only lab ready."
+    info "Host-only lab enabled."
 
 }
+
+# run() {
+
+#     require_root
+
+#     banner
+
+#     network_service_switch lab
+
+#     network_service_verify
+
+#     success "Host-only lab ready."
+
+# }
 
 # run() {
 

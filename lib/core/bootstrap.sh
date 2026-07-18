@@ -1,9 +1,31 @@
 
-# ###############################################################
-# # Events
-# ###############################################################
+#!/usr/bin/env bash
 
-# for FILE in "$LABCTL_HOME"/lib/core/events.sh
+
+set -euo pipefail
+
+LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Load configuration first
+source "$LABCTL_HOME/lib/core/config.sh"
+
+# Load UI
+source "$LABCTL_HOME/lib/ui/colors.sh"
+
+# Load core modules
+for file in "$LABCTL_HOME"/lib/core/*.sh
+do
+    [[ "$file" == *bootstrap.sh ]] && continue
+    source "$file"
+done
+
+# Load network modules
+for file in "$LABCTL_HOME"/lib/network/*.sh
+do
+    source "$file"
+done
+
+# for FILE in "$HOME"/lib/core/events.sh
 # do
 #     source "$FILE"
 # done
@@ -12,7 +34,7 @@
 # # Providers
 # ###############################################################
 
-# for FILE in "$LABCTL_HOME"/lib/providers/*.sh
+# for FILE in "$HOME"/lib/providers/*.sh
 # do
 #     source "$FILE"
 # done
@@ -23,14 +45,14 @@
 # # Services
 # ###############################################################
 
-# for FILE in "$LABCTL_HOME"/lib/services/*.sh
+# for FILE in "$HOME"/lib/services/*.sh
 # do
 #     source "$FILE"
 # done
 
 
-# source "$LABCTL_HOME/lib/core/registry.sh"
-# source "$LABCTL_HOME/lib/core/plugin_manager.sh"
+# source "$HOME/lib/core/registry.sh"
+# source "$HOME/lib/core/plugin_manager.sh"
 
 # plugin_load_all
 
@@ -42,13 +64,13 @@
 # # # Bootstrap
 # # ###############################################################################
 
-# # source "$LABCTL_HOME/lib/core/config.sh"
+# # source "$HOME/lib/core/config.sh"
 
-# # source "$LABCTL_HOME/lib/core/logger.sh"
+# # source "$HOME/lib/core/logger.sh"
 
-# # source "$LABCTL_HOME/lib/core/json.sh"
+# # source "$HOME/lib/core/json.sh"
 
-# # source "$LABCTL_HOME/lib/core/utils.sh"
+# # source "$HOME/lib/core/utils.sh"
 
 # # init_state
 

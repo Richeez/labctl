@@ -1,39 +1,63 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # BRIDGED MODE
 ###############################################################################
 
 
+
 run() {
 
     require_root
 
-    banner
+    warn "This connects the VM to your physical network."
 
-    warn "This exposes the VM to your LAN."
-
-    read -rp "Continue? (YES/yes/y): " ANSWER
+    read -rp "Continue? (y/N): " ANSWER
 
     case "${ANSWER,,}" in
         y|yes)
             ;;
         *)
+            info "Cancelled."
             exit 0
             ;;
     esac
 
-    network_service_switch bridged
+    network_bridged
 
-    network_service_verify
-
-    verify_dns
-
-    verify_internet
-
-    success "Bridged networking ready."
+    info "Bridged mode enabled."
 
 }
+
+# run() {
+
+#     require_root
+
+#     banner
+
+#     warn "This exposes the VM to your LAN."
+
+#     read -rp "Continue? (YES/yes/y): " ANSWER
+
+#     case "${ANSWER,,}" in
+#         y|yes)
+#             ;;
+#         *)
+#             exit 0
+#             ;;
+#     esac
+
+#     network_service_switch bridged
+
+#     network_service_verify
+
+#     verify_dns
+
+#     verify_internet
+
+#     success "Bridged networking ready."
+
+# }
 
 # run() {
 

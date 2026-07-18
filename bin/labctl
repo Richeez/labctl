@@ -12,7 +12,10 @@
 
 # dispatch "$@"
 
+set -euo pipefail
 
-echo "LABCTL v1.0.0"
-echo
-echo "Project initialized successfully."
+HOME="$(cd "$(dirname "$0")/.." && pwd)"
+
+source "$HOME/lib/core/bootstrap.sh"
+
+dispatch "$@"
