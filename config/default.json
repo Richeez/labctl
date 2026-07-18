@@ -1,0 +1,30 @@
+{
+    "version": "1.0.0",
+    "logging": {
+        "level": "INFO",
+        "file": "/var/log/labctl/labctl.log"
+    },
+    "interfaces": {
+        "nat": "eth0",
+        "hostonly": "eth1",
+        "bridged": "eth2",
+        "contain": "eth3"
+    },
+    "timeouts": {
+        "dhcp": 15,
+        "ping": 2
+    },
+    "network": {
+        "dns": "1.1.1.1",
+        "internet_check": "8.8.8.8"
+    },
+    "plugins": {
+        "autoload": true
+    },
+    "connections": {
+    "update": "NAT",
+    "lab": "LAB",
+    "bridged": "BRIDGED",
+    "contain": "NATNET"
+}
+}
