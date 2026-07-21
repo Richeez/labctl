@@ -1,34 +1,30 @@
 #!/bin/bash
 
-###############################################################################
-# Command Dispatcher
-###############################################################################
 
 
+# dispatch() {
 
-dispatch() {
+#     local COMMAND="${1:-help}"
 
-    local COMMAND="${1:-help}"
+#     shift || true
 
-    shift || true
+#     local FILE
 
-    local FILE
+#     FILE="$HOME/lib/commands/${COMMAND}.sh"
 
-    FILE="$HOME/lib/commands/${COMMAND}.sh"
+#     if [[ ! -f "$FILE" ]]; then
+#         fatal "Unknown command: $COMMAND"
+#     fi
 
-    if [[ ! -f "$FILE" ]]; then
-        fatal "Unknown command: $COMMAND"
-    fi
+#     source "$FILE"
 
-    source "$FILE"
+#     if ! declare -F run >/dev/null; then
+#         fatal "Command '$COMMAND' is invalid."
+#     fi
 
-    if ! declare -F run >/dev/null; then
-        fatal "Command '$COMMAND' is invalid."
-    fi
+#     run "$@"
 
-    run "$@"
-
-}
+# }
 
 # dispatch() {
 

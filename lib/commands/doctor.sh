@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 run() {
 
-    network_doctor_task
+    log_banner "LABCTL DOCTOR"
+
+    verify_all
 
 }

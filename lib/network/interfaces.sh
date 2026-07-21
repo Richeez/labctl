@@ -1,80 +1,90 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
-# Interface Manager
+# Interface API
+#
+# Responsible for:
+#   - Listing interfaces
+#   - Interface state
+#   - MAC addresses
+#   - IPv4 addresses
 ###############################################################################
 
-# Return a list of all network interfaces except loopback
-list_interfaces() {
+###############################################################################
+# List Interfaces
+###############################################################################
+
+network_interfaces() {
+
     ip -o link show \
         | awk -F': ' '{print $2}' \
         | grep -v '^lo$'
+
 }
 
-# Check if an interface exists
-interface_exists() {
-    ip link show "$1" >/dev/null 2>&1
+###############################################################################
+# Interface Exists
+###############################################################################
+
+network_interface_exists() {
+
+    local device="$1"
+
+    ip link show "$device" >/dev/null 2>&1
+
 }
 
-# Return true if interface is up
-interface_up() {
-    ip link show "$1" | grep -q "UP"
+###############################################################################
+# Interface State
+###############################################################################
+
+network_interface_state() {
+
+    local iface="$1"
+
+    network_interface_exists "$iface" || return 1
+
+    ip -br link show "$iface" | awk '{print $2}'
+
 }
 
-# Bring interface up
-bring_interface_up() {
-    local IFACE="$1"
 
-    interface_exists "$IFACE" || fatal "Interface $IFACE not found."
+###############################################################################
+# IPv4 Address
+###############################################################################
 
-    ip link set "$IFACE" up
+network_interface_ip() {
+
+    local device="$1"
+
+    network_interface_exists "$device" || return 1
+
+    ip -4 addr show "$device" \
+        | awk '
+            /inet / {
+                print $2
+                exit
+            }
+        '
+
 }
 
-# Bring interface down
-bring_interface_down() {
-    local IFACE="$1"
+###############################################################################
+# MAC Address
+###############################################################################
 
-    interface_exists "$IFACE" || fatal "Interface $IFACE not found."
+network_interface_mac() {
 
-    ip link set "$IFACE" down
-}
+    local device="$1"
 
-# Return IPv4 address
-interface_ip() {
-    local IFACE="$1"
+    network_interface_exists "$device" || return 1
 
-    ip -4 addr show "$IFACE" \
-        | awk '/inet / {print $2}' \
-        | cut -d/ -f1
-}
+    ip link show "$device" \
+        | awk '
+            /link\/ether/ {
+                print $2
+                exit
+            }
+        '
 
-# Return CIDR
-interface_cidr() {
-    local IFACE="$1"
-
-    ip -4 addr show "$IFACE" \
-        | awk '/inet / {print $2}'
-}
-
-# Return MAC address
-interface_mac() {
-    local IFACE="$1"
-
-    cat "/sys/class/net/$IFACE/address"
-}
-
-# Return interface state
-interface_state() {
-    nmcli -t \
-        -f GENERAL.STATE \
-        device show "$1" \
-        | cut -d: -f2
-}
-
-# Return active NetworkManager connection
-active_connection() {
-    nmcli -t \
-        -f GENERAL.CONNECTION \
-        device show "$1" \
-        | cut -d: -f2
 }

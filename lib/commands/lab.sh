@@ -13,7 +13,7 @@ run() {
 
     network_lab
 
-    info "Host-only lab enabled."
+    # info "Host-only lab enabled."
 
 }
 

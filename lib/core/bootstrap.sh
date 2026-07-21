@@ -1,125 +1,49 @@
-
 #!/usr/bin/env bash
 
+###############################################################################
+# LABCTL Bootstrap
+#
+# Initializes the application and loads every library module.
+###############################################################################
 
-set -euo pipefail
 
-LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+###############################################################################
+# Resolve project root
+###############################################################################
 
-# Load configuration first
-source "$LABCTL_HOME/lib/core/config.sh"
 
-# Load UI
-source "$LABCTL_HOME/lib/ui/colors.sh"
+###############################################################################
+# Load helper
+###############################################################################
 
-# Load core modules
-for file in "$LABCTL_HOME"/lib/core/*.sh
+load_directory() {
+
+    local directory="$1"
+
+    [[ -d "$directory" ]] || return
+
+    while IFS= read -r file
 do
-    [[ "$file" == *bootstrap.sh ]] && continue
+    [[ "$file" == "$LABCTL_HOME/lib/core/bootstrap.sh" ]] && continue
     source "$file"
-done
+done < <(find "$directory" -maxdepth 1 -type f -name "*.sh" | sort)
 
-# Load network modules
-for file in "$LABCTL_HOME"/lib/network/*.sh
-do
-    source "$file"
-done
+}
 
-# for FILE in "$HOME"/lib/core/events.sh
-# do
-#     source "$FILE"
-# done
+###############################################################################
+# Load modules
+###############################################################################
 
-# ###############################################################
-# # Providers
-# ###############################################################
+load_directory "$LABCTL_HOME/lib/ui"
 
-# for FILE in "$HOME"/lib/providers/*.sh
-# do
-#     source "$FILE"
-# done
+load_directory "$LABCTL_HOME/lib/core"
 
+load_directory "$LABCTL_HOME/lib/network"
 
+mkdir -p "$LOG_DIR"
 
-# ###############################################################
-# # Services
-# ###############################################################
+###############################################################################
+# Prevent multiple imports
+###############################################################################
 
-# for FILE in "$HOME"/lib/services/*.sh
-# do
-#     source "$FILE"
-# done
-
-
-# source "$HOME/lib/core/registry.sh"
-# source "$HOME/lib/core/plugin_manager.sh"
-
-# plugin_load_all
-
-
-
-# # #!/bin/bash
-
-# # ###############################################################################
-# # # Bootstrap
-# # ###############################################################################
-
-# # source "$HOME/lib/core/config.sh"
-
-# # source "$HOME/lib/core/logger.sh"
-
-# # source "$HOME/lib/core/json.sh"
-
-# # source "$HOME/lib/core/utils.sh"
-
-# # init_state
-
-# # init_inventory
-
-# # mkdir -p /var/lib/labctl/scans
-
-# # mkdir -p /var/cache/labctl
-
-# # validate_dependencies
-
-# # ###############################################################
-# # # Load Network Engine
-# # ###############################################################
-
-# # for FILE in "$LABCTL_HOME"/lib/network/*.sh
-# # do
-# #     source "$FILE"
-# # done
-
-# # ###############################################################
-# # # Load UI
-# # ###############################################################
-
-# # for FILE in "$LABCTL_HOME"/lib/ui/*.sh
-# # do
-# #     source "$FILE"
-# # done
-
-# # ###############################################################
-# # # Load Lab Engine
-# # ###############################################################
-
-# # for FILE in "$LABCTL_HOME"/lib/lab/*.sh
-# # do
-# #     source "$FILE"
-# # done
-
-# # ###############################################################
-# # # Load Plugins
-# # ###############################################################
-
-# # for FILE in "$LABCTL_HOME"/lib/plugins/*.sh
-# # do
-# #     [[ -f "$FILE" ]] && source "$FILE"
-# # done
-
-# # ###############################################################
-# # # Dispatcher
-# # ###############################################################
-
-# # source "$LABCTL_HOME/lib/core/dispatcher.sh"
+export BOOTSTRAPPED=1

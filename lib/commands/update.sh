@@ -6,17 +6,23 @@
 
 
 
-
-
 run() {
 
     require_root
 
     network_update
 
-    info "Internet mode enabled."
-
 }
+
+
+# run() {
+
+
+#     network_update
+
+#     info "Internet mode enabled."
+
+# }
 
 # run() {
 

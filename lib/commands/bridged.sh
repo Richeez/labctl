@@ -8,9 +8,9 @@
 
 run() {
 
-    require_root
+    # require_root
 
-    warn "This connects the VM to your physical network."
+    log_warning "This connects the VM to your physical network."
 
     read -rp "Continue? (y/N): " ANSWER
 
@@ -18,14 +18,14 @@ run() {
         y|yes)
             ;;
         *)
-            info "Cancelled."
+            log_info "Cancelled."
             exit 0
             ;;
     esac
 
     network_bridged
 
-    info "Bridged mode enabled."
+    # info "Bridged mode enabled."
 
 }
 

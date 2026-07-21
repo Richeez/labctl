@@ -5,6 +5,21 @@
 ###############################################################################
 
 run() {
+profile_list
+
+profile_active
+
+profile_device NAT
+
+profile_is_active NAT && echo "YES"
+
+network_interfaces
+
+network_interface_ip eth0
+
+network_interface_mac eth0
+
+network_interface_state eth0
 
 cat <<EOF
 

@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
 # Configuration Loader
 ###############################################################################
 
-CONFIG_FILE="$HOME/config/default.conf"
+CONFIG_FILE="$LABCTL_HOME/config/default.conf"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "Configuration file not found:"

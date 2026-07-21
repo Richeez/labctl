@@ -6,7 +6,7 @@
 
 require_root() {
 
-    [[ "$EUID" -eq 0 ]] || fatal "Please run with sudo."
+    [[ "$EUID" -eq 0 ]] || log_error "Please run with sudo."
 
 }
 
@@ -18,7 +18,7 @@ command_exists() {
 
 require_command() {
 
-    command_exists "$1" || fatal "$1 not installed."
+    command_exists "$1" || log_error "$1 not installed."
 
 }
 
@@ -59,4 +59,10 @@ timestamp() {
 
     date '+%F %T'
 
+}
+
+
+value_or_dash() {
+
+    [[ -n "$1" ]] && printf "%s" "$1" || printf "-"
 }

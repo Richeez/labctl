@@ -4,7 +4,7 @@
 # Plugin Loader
 ###############################################################################
 
-PLUGIN_DIR="$LABCTL_HOME/lib/plugins"
+PLUGIN_DIR="$HOME/lib/plugins"
 
 plugin_load_all() {
 

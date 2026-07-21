@@ -1,55 +1,99 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ###############################################################################
-# Route Manager
+# Routing API
+#
+# Responsible for:
+#   - Default gateway
+#   - Default interface
+#   - Routing table
+#   - Route management
 ###############################################################################
 
-# Return current default interface
-default_interface() {
-    ip route \
-        | awk '/^default/ {print $5; exit}'
-}
+###############################################################################
+# Routing Table
+###############################################################################
 
-# Return default gateway
-default_gateway() {
-    ip route \
-        | awk '/^default/ {print $3; exit}'
-}
+network_routes() {
 
-# Print routing table
-show_routes() {
     ip route
+
 }
 
-# Count default routes
-default_route_count() {
+###############################################################################
+# Default Gateway
+###############################################################################
+
+network_default_gateway() {
+
     ip route \
-        | grep '^default' \
-        | wc -l
+        | awk '
+            /^default/ {
+                print $3
+                exit
+            }
+        '
+
 }
 
-# True if multiple default routes exist
-multiple_default_routes() {
-    [[ "$(default_route_count)" -gt 1 ]]
+###############################################################################
+# Default Interface
+###############################################################################
+
+network_default_interface() {
+
+    ip route \
+        | awk '
+            /^default/ {
+                print $5
+                exit
+            }
+        '
+
 }
 
-# Remove all default routes
-flush_default_routes() {
-    while ip route | grep -q '^default'
-    do
-        ip route del default || break
+###############################################################################
+# Has Default Route
+###############################################################################
+
+network_has_default_route() {
+
+    ip route | grep -q '^default'
+
+}
+
+###############################################################################
+# Route Count
+###############################################################################
+
+network_route_count() {
+
+    ip route | wc -l
+
+}
+
+###############################################################################
+# Flush Default Routes
+###############################################################################
+
+network_flush_default_routes() {
+
+    log_info "Removing existing default routes..."
+
+    while network_has_default_route; do
+
+        local gateway
+        local device
+
+        gateway=$(network_default_gateway)
+        device=$(network_default_interface)
+
+        if ! ip route del default via "$gateway" dev "$device" 2>/dev/null; then
+            break
+        fi
+
     done
-}
 
-# Verify active default interface
-verify_default_route() {
-
-    local EXPECTED="$1"
-
-    local CURRENT
-
-    CURRENT=$(default_interface)
-
-    [[ "$CURRENT" == "$EXPECTED" ]]
+    log_success "Default routes cleared."
 
 }

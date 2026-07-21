@@ -1,21 +1,137 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
 
 ###############################################################################
-# LABCTL
+# Locate Project Root
 ###############################################################################
+
+LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+export LABCTL_HOME
+
+###############################################################################
+# Bootstrap
+###############################################################################
+
+source "$LABCTL_HOME/lib/core/bootstrap.sh"
+
+###############################################################################
+# Command Loader
+###############################################################################
+
+load_command() {
+
+    local command="$1"
+    local file="$LABCTL_HOME/lib/commands/${command}.sh"
+
+    if [[ ! -f "$file" ]]; then
+        log_error "Unknown command: $command"
+        echo
+        help
+        exit 1
+    fi
+
+    unset -f run 2>/dev/null || true
+
+    source "$file"
+
+    if ! declare -F run >/dev/null; then
+        log_error "Command '$command' does not define run()."
+        exit 1
+    fi
+
+}
+
+###############################################################################
+# Built-in Commands
+###############################################################################
+
+help() {
+
+echo "LABCTL_HOME=$LABCTL_HOME"
+pwd
+ls -R commands
+echo "FILE=$file"
+
+
+cat <<EOF
+LABCTL v${VERSION}
+
+Usage:
+    labctl <command>
+
+Commands
+
+    help        Show this help
+    version     Show version
+    status      Show network status
+    doctor      Verify networking health
+    test
+
+    update      Internet mode (NAT)
+    contain     Containment mode (NAT Network)
+    lab         Internal lab
+    bridged     Bridged network
+
+Examples
+
+    labctl status
+    labctl doctor
+    labctl update
+    labctl contain
+
+EOF
+
+}
+
+version() {
+
+    echo "${NAME} ${VERSION}"
+
+}
+
+
+################################################################################
+# Main
+###############################################################################
+
+main() {
+
+    local command="${1:-help}"
+
+    case "$command" in
+
+        help|-h|--help)
+
+            help
+            ;;
+
+        version|-v|--version)
+
+            version
+            ;;
+
+        *)
+
+            load_command "$command"
+
+            shift || true
+
+            run "$@"
+            ;;
+
+    esac
+
+}
+
+main "$@"
+
 
 # set -euo pipefail
 
-# export LABCTL_HOME="/opt/labctl"
+# HOME="$(cd "$(dirname "$0")/.." && pwd)"
 
-# source "$LABCTL_HOME/lib/core/bootstrap.sh"
+# source "$HOME/lib/core/bootstrap.sh"
 
 # dispatch "$@"
-
-set -euo pipefail
-
-HOME="$(cd "$(dirname "$0")/.." && pwd)"
-
-source "$HOME/lib/core/bootstrap.sh"
-
-dispatch "$@"

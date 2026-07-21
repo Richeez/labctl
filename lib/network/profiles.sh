@@ -1,53 +1,157 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# NetworkManager Profile Functions
+# NetworkManager Profile API
+#
+# Responsible for:
+#   - Discovering profiles
+#   - Activating profiles
+#   - Deactivating profiles
+#   - Finding attached devices
+#   - Determining active status
+###############################################################################
+
+###############################################################################
+# Profile Existence
 ###############################################################################
 
 profile_exists() {
 
-    local PROFILE="$1"
+    local profile="$1"
 
-    nmcli -t -f NAME connection show | grep -Fxq "$PROFILE"
+    nmcli -t -f NAME connection show \
+        | grep -Fxq "$profile"
 
 }
+
+###############################################################################
+# Active Profile
+###############################################################################
+
+profile_active() {
+
+    nmcli -t -f NAME connection show --active
+
+}
+
+###############################################################################
+# Is Active
+###############################################################################
 
 profile_is_active() {
 
-    local PROFILE="$1"
+    local profile="$1"
 
-    nmcli -t -f NAME connection show --active | grep -Fxq "$PROFILE"
+    profile_active | grep -Fxq "$profile"
 
 }
+
+###############################################################################
+# Device Bound To Profile
+###############################################################################
+
+profile_device() {
+
+    local profile="$1"
+
+    nmcli -t -f NAME,DEVICE connection show \
+        | awk -F: -v p="$profile" '
+            $1==p {
+                print $2
+                exit
+            }
+        '
+
+}
+
+###############################################################################
+# Activate Profile
+###############################################################################
 
 profile_activate() {
 
-    local PROFILE="$1"
+    local profile="$1"
 
-    profile_exists "$PROFILE" \
-        || fatal "Network profile '$PROFILE' does not exist."
+    log_info "Activating profile: $profile"
 
-    info "Activating profile: $PROFILE"
+    if ! nmcli connection up "$profile" >/dev/null; then
+        log_error "Failed to activate profile: $profile"
+        return 1
+    fi
 
-    nmcli connection up "$PROFILE" >/dev/null
+    log_success "$profile activated."
 
 }
+
+###############################################################################
+# Deactivate Profile
+###############################################################################
 
 profile_deactivate() {
 
-    local PROFILE="$1"
+    local profile="$1"
 
-    profile_exists "$PROFILE" || return
+    if profile_is_active "$profile"; then
 
-    nmcli connection down "$PROFILE" >/dev/null 2>&1 || true
+    log_info "Disconnecting profile: $profile"
+
+    if ! nmcli connection down "$profile" >/dev/null; then
+        log_warning "Unable to disconnect $profile"
+        return 1
+    fi
+
+    log_success "$profile disconnected."
+
+fi
 
 }
 
+###############################################################################
+# Deactivate All Managed Profiles
+###############################################################################
+
 profile_deactivate_all() {
 
-    profile_deactivate "$PROFILE_UPDATE"
-    profile_deactivate "$PROFILE_LAB"
-    profile_deactivate "$PROFILE_BRIDGED"
-    profile_deactivate "$PROFILE_CONTAIN"
+    local profiles=(
+        "$PROFILE_NAT"
+        "$PROFILE_NATNET"
+        "$PROFILE_LAB"
+        "$PROFILE_BRIDGED"
+    )
+
+    local profile
+
+    for profile in "${profiles[@]}"
+    do
+        profile_deactivate "$profile"
+    done
+
+}
+
+###############################################################################
+# Activate Only One Profile
+###############################################################################
+
+profile_activate_only() {
+
+    local profile="$1"
+
+    profile_deactivate_all || return 1
+
+    profile_activate "$profile" || return 1
+
+}
+
+###############################################################################
+# Print Managed Profiles
+###############################################################################
+
+profile_list() {
+
+    printf "%s\n" \
+        "$PROFILE_NAT" \
+        "$PROFILE_NATNET" \
+        "$PROFILE_LAB" \
+        "$PROFILE_BRIDGED"
 
 }

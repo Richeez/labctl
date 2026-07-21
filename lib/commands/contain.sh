@@ -13,7 +13,7 @@ run() {
 
     network_contain
 
-    info "Contain mode enabled."
+    # info "Contain mode enabled."
 
 }
 

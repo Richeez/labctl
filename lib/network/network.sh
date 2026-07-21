@@ -1,22 +1,44 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Public Network API
+# Network Service
+###############################################################################
+
+###############################################################################
+# Switch Profile
 ###############################################################################
 
 network_switch() {
 
-    local PROFILE="$1"
+    local profile="$1"
 
-    profile_deactivate_all
+    if ! profile_exists "$profile"; then
+        log_error "Profile '$profile' does not exist."
+        return 1
+    fi
 
-    profile_activate "$PROFILE"
+    if profile_is_active "$profile"; then
+        log_info "$profile is already active."
+        return 0
+    fi
+
+    log_info "Switching network profile..."
+
+    profile_activate_only "$profile" || return 1
+
+    log_success "Switched to $profile."
 
 }
 
 network_update() {
 
-    network_switch "$PROFILE_UPDATE"
+    network_switch "$PROFILE_NAT"
+
+}
+
+network_contain() {
+
+    network_switch "$PROFILE_NATNET"
 
 }
 
@@ -26,26 +48,23 @@ network_lab() {
 
 }
 
-network_contain() {
-
-    network_switch "$PROFILE_CONTAIN"
-
-}
-
 network_bridged() {
 
     network_switch "$PROFILE_BRIDGED"
 
 }
 
-network_default_interface() {
+network_current_profile() {
 
-    ip route | awk '/default/ {print $5; exit}'
+    while IFS= read -r profile; do
 
-}
+        if profile_is_active "$profile"; then
+            printf "%s\n" "$profile"
+            return 0
+        fi
 
-network_default_gateway() {
+    done < <(profile_list)
 
-    ip route | awk '/default/ {print $3; exit}'
+    return 1
 
 }
