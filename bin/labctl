@@ -5,9 +5,7 @@ set -Eeuo pipefail
 ###############################################################################
 # Locate Project Root
 ###############################################################################
-
 LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 export LABCTL_HOME
 
 ###############################################################################
@@ -23,7 +21,7 @@ source "$LABCTL_HOME/lib/core/bootstrap.sh"
 load_command() {
 
     local command="$1"
-    local file="$LABCTL_HOME/lib/commands/${command}.sh"
+    local file="$LABCTL_HOME/commands/${command}.sh"
 
     if [[ ! -f "$file" ]]; then
         log_error "Unknown command: $command"
@@ -48,12 +46,6 @@ load_command() {
 ###############################################################################
 
 help() {
-
-echo "LABCTL_HOME=$LABCTL_HOME"
-pwd
-ls -R commands
-echo "FILE=$file"
-
 
 cat <<EOF
 LABCTL v${VERSION}

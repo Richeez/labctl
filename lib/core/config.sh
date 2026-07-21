@@ -4,6 +4,7 @@
 # Configuration Loader
 ###############################################################################
 
+
 CONFIG_FILE="$LABCTL_HOME/config/default.conf"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
