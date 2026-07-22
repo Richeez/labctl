@@ -4,9 +4,19 @@
 # Utilities
 ###############################################################################
 
+# require_root() {
+
+#     [[ "$EUID" -eq 0 ]] || log_error "Please run with sudo."
+
+# }
+
 require_root() {
 
-    [[ "$EUID" -eq 0 ]] || log_error "Please run with sudo."
+    if [[ $EUID -ne 0 ]]
+    then
+        log_error "Please run with sudo."
+        exit 1
+    fi
 
 }
 

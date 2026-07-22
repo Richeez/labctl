@@ -21,7 +21,7 @@ source "$LABCTL_HOME/lib/core/bootstrap.sh"
 load_command() {
 
     local command="$1"
-    local file="$LABCTL_HOME/commands/${command}.sh"
+    local file="$COMMAND_DIR/${command}.sh"
 
     if [[ ! -f "$file" ]]; then
         log_error "Unknown command: $command"
@@ -59,7 +59,7 @@ Commands
     version     Show version
     status      Show network status
     doctor      Verify networking health
-    test
+    test        Test all logics effectively
 
     update      Internet mode (NAT)
     contain     Containment mode (NAT Network)
