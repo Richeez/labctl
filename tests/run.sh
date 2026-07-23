@@ -18,7 +18,7 @@ for test in "$LABCTL_HOME"/tests/test_*.sh; do
         echo "PASS"
     else
         echo "FAIL"
-        ((FAILED++))
+        ((++FAILED))
     fi
 
 done

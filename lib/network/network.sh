@@ -5,30 +5,69 @@
 ###############################################################################
 
 ###############################################################################
-# Switch Profile
+# Switch Network
 ###############################################################################
 
 network_switch() {
 
-    local profile="$1"
+    local PROFILE="$1"
 
-    if ! profile_exists "$profile"; then
-        log_error "Profile '$profile' does not exist."
+    profile_validate "$PROFILE" || {
+
+        log_error "Profile '$PROFILE' is misconfigured."
+
+        echo
+
+        log_info "Run:"
+
+        echo "    sudo labctl doctor --repair"
+
         return 1
-    fi
 
-    if profile_is_active "$profile"; then
-        log_info "$profile is already active."
-        return 0
-    fi
+    }
+
+    profile_exists "$PROFILE" || {
+
+        log_error "Unknown profile '$PROFILE'."
+
+        return 1
+
+    }
 
     log_info "Switching network profile..."
 
-    profile_activate_only "$profile" || return 1
-
-    log_success "Switched to $profile."
+    profile_activate_only "$PROFILE"
 
 }
+
+# network_switch() {
+
+#     local PROFILE="$1"
+
+#     #
+#     # Verify profile exists
+#     #
+#     if ! profile_exists "$PROFILE"; then
+#         log_error "Profile '$PROFILE' does not exist."
+#         return 1
+#     fi
+
+#     #
+#     # Verify profile configuration
+#     #
+#     if ! profile_validate "$PROFILE"; then
+#         log_error "Profile '$PROFILE' is misconfigured."
+#         echo
+#         log_info "Run:"
+#         echo "    sudo labctl doctor --repair"
+#         return 1
+#     fi
+
+#     log_info "Switching network profile..."
+
+#     profile_activate_only "$PROFILE"
+
+# }
 
 network_update() {
 
@@ -54,17 +93,3 @@ network_bridged() {
 
 }
 
-network_current_profile() {
-
-    while IFS= read -r profile; do
-
-        if profile_is_active "$profile"; then
-            printf "%s\n" "$profile"
-            return 0
-        fi
-
-    done < <(profile_list)
-
-    return 1
-
-}

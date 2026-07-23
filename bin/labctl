@@ -47,6 +47,10 @@ load_command() {
 
 help() {
 
+#     for i in eth0 eth1 eth2 eth3; do
+#     echo "$i -> $(cat /sys/class/net/$i/address)"
+# done
+
 cat <<EOF
 LABCTL v${VERSION}
 

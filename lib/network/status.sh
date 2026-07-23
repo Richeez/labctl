@@ -10,7 +10,7 @@
 
 network_status_table() {
 
-    printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
+    printf "%-10s %-10s %-13s %-18s %-16s %-18s %-8s\n" \
         "PROFILE" \
         "DEVICE" \
         "LINK" \
@@ -19,64 +19,152 @@ network_status_table() {
         "MAC ADDRESS" \
         "ACTIVE"
 
-    printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
+    printf "%-10s %-10s %-13s %-18s %-16s %-18s %-8s\n" \
         "--------" \
         "------" \
-        "----------" \
+        "------------" \
         "-----------------" \
         "---------------" \
         "-----------------" \
         "------"
 
-    local profile
-    local device
-    local gateway
-    local active
+    local PROFILE
+    local DEVICE
+    local LINK
+    local IP
+    local GATEWAY
+    local MAC
+    local ACTIVE
 
-    local default_interface
-local default_gateway
+    local DEFAULT_IFACE
+    local DEFAULT_GATEWAY
 
-default_interface="$(network_default_interface)"
-default_gateway="$(network_default_gateway)"
+    DEFAULT_IFACE="$(network_default_interface)"
+    DEFAULT_GATEWAY="$(network_default_gateway)"
 
-while IFS= read -r profile; do
+    while IFS= read -r PROFILE
+    do
 
-    device="$(profile_device "$profile")"
+        DEVICE="$(profile_device "$PROFILE")"
 
-    gateway="-"
+        #
+        # Profile not currently attached to a device
+        #
+        if [[ -z "$DEVICE" ]]; then
 
-    if [[ "$device" == "$default_interface" ]]; then
-        gateway="$default_gateway"
-    fi
+            DEVICE="-"
+            LINK="-"
+            IP="-"
+            GATEWAY="-"
+            MAC="-"
 
-    if profile_is_active "$profile"; then
-        active="YES"
-    else
-        active="NO"
-    fi
+        else
 
-    printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
-        "$profile" \
-        "$(value_or_dash "$device")" \
-        "$(value_or_dash "$(network_interface_state "$device")")" \
-        "$(value_or_dash "$(network_interface_ip "$device")")" \
-        "$(value_or_dash "$gateway")" \
-        "$(value_or_dash "$(network_interface_mac "$device")")" \
-        "$active"
+            LINK="$(network_interface_state "$DEVICE")"
+            IP="$(network_interface_ip "$DEVICE")"
+            MAC="$(network_interface_mac "$DEVICE")"
 
-done < <(profile_list)
+            if [[ "$DEVICE" == "$DEFAULT_IFACE" ]]; then
+                GATEWAY="$DEFAULT_GATEWAY"
+            else
+                GATEWAY="-"
+            fi
+
+        fi
+
+        if profile_is_active "$PROFILE"; then
+            ACTIVE="YES"
+        else
+            ACTIVE="NO"
+        fi
+
+        printf "%-10s %-10s %-13s %-18s %-16s %-18s %-8s\n" \
+            "$PROFILE" \
+            "$DEVICE" \
+            "$LINK" \
+            "$IP" \
+            "$GATEWAY" \
+            "$MAC" \
+            "$ACTIVE"
+
+    done < <(profile_list)
 
 }
+
+# network_status_table() {
+
+#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
+#         "PROFILE" \
+#         "DEVICE" \
+#         "LINK" \
+#         "IP ADDRESS" \
+#         "GATEWAY" \
+#         "MAC ADDRESS" \
+#         "ACTIVE"
+
+#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
+#         "--------" \
+#         "------" \
+#         "----------" \
+#         "-----------------" \
+#         "---------------" \
+#         "-----------------" \
+#         "------"
+
+#     local profile
+#     local device
+#     local gateway
+#     local active
+
+#     local default_interface
+# local default_gateway
+
+# default_interface="$(network_default_interface)"
+# default_gateway="$(network_default_gateway)"
+
+# while IFS= read -r profile; do
+
+#     device="$(profile_device "$profile")"
+
+#     gateway="-"
+
+#     if [[ "$device" == "$default_interface" ]]; then
+#         gateway="$default_gateway"
+#     fi
+
+#     if profile_is_active "$profile"; then
+#         active="YES"
+#     else
+#         active="NO"
+#     fi
+
+#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
+#         "$profile" \
+#         "$(value_or_dash "$device")" \
+#         "$(value_or_dash "$(network_interface_state "$device")")" \
+#         "$(value_or_dash "$(network_interface_ip "$device")")" \
+#         "$(value_or_dash "$gateway")" \
+#         "$(value_or_dash "$(network_interface_mac "$device")")" \
+#         "$active"
+
+# done < <(profile_list)
+
+# }
 
 
 network_status_summary() {
 
+    local PROFILE
+    local DEVICE
+
+    PROFILE="$(profile_current)"
+    DEVICE="$(profile_device "$PROFILE")"
+
     echo
 
-    log_info "Current Profile : $(value_or_dash "$(network_current_profile)")"
-
-    log_info "Default Interface : $(value_or_dash "$(network_default_interface)")"
-
+    log_info "Current Profile   : ${PROFILE:--}"
+    log_info "Default Interface : ${DEVICE:--}"
+    log_info "IPv4 Address      : $(value_or_dash "$(network_interface_ip "$DEVICE")")"
     log_info "Default Gateway   : $(value_or_dash "$(network_default_gateway)")"
 
 }
@@ -94,11 +182,19 @@ network_status_routes() {
 
 network_status_health() {
 
-    echo
+    local PROFILE
 
+    PROFILE="$(profile_current)"
+
+    echo
     log_banner "HEALTH CHECKS"
 
-    verify_all
+    if [[ -z "$PROFILE" ]]; then
+        log_error "No active profile."
+        return 1
+    fi
+
+    verify_profile "$PROFILE"
 
 }
 
