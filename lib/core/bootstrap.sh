@@ -6,39 +6,181 @@
 # Initializes the application and loads every library module.
 ###############################################################################
 
+###############################################################################
+# Bootstrap Exit Codes
+###############################################################################
+
+readonly BOOTSTRAP_SUCCESS=0
+readonly BOOTSTRAP_FAILURE=1
+readonly BOOTSTRAP_INVALID_ARGUMENT=2
 
 ###############################################################################
-# Resolve project root
+# LABCTL Bootstrap / Module Loader
 ###############################################################################
+
+###############################################################################
+# Require Module
+#
+# Loads a required library file.
+#
+# Returns:
+#   BOOTSTRAP_SUCCESS
+#   BOOTSTRAP_FAILURE
+###############################################################################
+
+bootstrap_require() {
+
+    local file="$1"
+
+
+    ###########################################################################
+    # Validate argument
+    ###########################################################################
+
+    if [[ -z "$file" ]]; then
+
+        log_error "No bootstrap library specified."
+
+        return "$BOOTSTRAP_INVALID_ARGUMENT"
+
+    fi
+
+
+    ###########################################################################
+    # Validate file
+    ###########################################################################
+
+    if [[ ! -f "$file" ]]; then
+
+        log_error "Missing bootstrap library:"
+        log_error "  $file"
+
+        return "$BOOTSTRAP_FAILURE"
+
+    fi
+
+
+    ###########################################################################
+    # Load module
+    ###########################################################################
+
+    if ! source "$file"; then
+
+        log_error "Failed to load bootstrap library:"
+        log_error "  $file"
+
+        return "$BOOTSTRAP_FAILURE"
+
+    fi
+
+
+    return "$BOOTSTRAP_SUCCESS"
+}
 
 
 ###############################################################################
-# Load helper
+# Load Directory
+#
+# Loads all shell modules from a directory in deterministic order.
+#
+# Missing directories are treated as optional.
+#
+# Returns:
+#   EXIT_SUCCESS
+#   EXIT_FAILURE
 ###############################################################################
 
 load_directory() {
 
     local directory="$1"
+    local file
 
-    [[ -d "$directory" ]] || return
 
-    while IFS= read -r file
-do
-    [[ "$file" == "$LABCTL_HOME/lib/core/bootstrap.sh" ]] && continue
-    source "$file"
-done < <(find "$directory" -maxdepth 1 -type f -name "*.sh" | sort)
+    ###########################################################################
+    # Optional directory
+    ###########################################################################
 
+    [[ -d "$directory" ]] || return "$BOOTSTRAP_SUCCESS"
+
+
+    ###########################################################################
+    # Load modules
+    ###########################################################################
+
+    while IFS= read -r file; do
+
+        #######################################################################
+        # Never load bootstrap recursively
+        #######################################################################
+
+        [[ "$file" == "$LABCTL_HOME/lib/core/bootstrap.sh" ]] && continue
+
+
+        #######################################################################
+        # Load module
+        #######################################################################
+
+        bootstrap_require "$file" || {
+
+            log_error "Failed loading module:"
+            log_error "  $file"
+
+            return "$BOOTSTRAP_FAILURE"
+
+        }
+
+    done < <(
+        find "$directory" \
+            -maxdepth 1 \
+            -type f \
+            -name "*.sh" \
+            -print |
+        sort
+    )
+
+
+    return "$BOOTSTRAP_SUCCESS"
 }
+
+# load_directory() {
+
+#     local directory="$1"
+#     local file
+
+#     [[ -d "$directory" ]] || return "$EXIT_SUCCESS"
+
+#     while IFS= read -r file; do
+
+#         [[ "$file" == "$LABCTL_HOME/lib/core/bootstrap.sh" ]] && continue
+
+#         source "$file"
+
+#     done < <(
+#         find "$directory" \
+#             -maxdepth 1 \
+#             -type f \
+#             -name "*.sh" \
+#             -print |
+#         sort
+#     )
+
+# }
 
 ###############################################################################
 # Load modules
 ###############################################################################
+load_directory "$LABCTL_HOME/config" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/ui" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/core" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/system" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/cache" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/network" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/install" || return "$BOOTSTRAP_FAILURE"
 
-load_directory "$LABCTL_HOME/lib/ui"
+settings_load
 
-load_directory "$LABCTL_HOME/lib/core"
+verify_install_modules || return $?
 
-load_directory "$LABCTL_HOME/lib/network"
 
 mkdir -p "$LOG_DIR"
 

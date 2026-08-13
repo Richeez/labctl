@@ -40,12 +40,12 @@ network_status_table() {
     local DEFAULT_GATEWAY
 
     DEFAULT_IFACE="$(network_default_interface)"
-    DEFAULT_GATEWAY="$(network_default_gateway)"
+    DEFAULT_GATEWAY="$(state_gateway)"
 
     while IFS= read -r PROFILE
     do
 
-        DEVICE="$(profile_device "$PROFILE")"
+        DEVICE="$(state_device "$PROFILE")"
 
         #
         # Profile not currently attached to a device
@@ -60,9 +60,9 @@ network_status_table() {
 
         else
 
-            LINK="$(network_interface_state "$DEVICE")"
-            IP="$(network_interface_ip "$DEVICE")"
-            MAC="$(network_interface_mac "$DEVICE")"
+            LINK="$(state_connection "$DEVICE")"
+            IP="$(state_ip "$DEVICE")"
+            MAC="$(state_mac "$DEVICE")"
 
             if [[ "$DEVICE" == "$DEFAULT_IFACE" ]]; then
                 GATEWAY="$DEFAULT_GATEWAY"
@@ -91,65 +91,6 @@ network_status_table() {
 
 }
 
-# network_status_table() {
-
-#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
-#         "PROFILE" \
-#         "DEVICE" \
-#         "LINK" \
-#         "IP ADDRESS" \
-#         "GATEWAY" \
-#         "MAC ADDRESS" \
-#         "ACTIVE"
-
-#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
-#         "--------" \
-#         "------" \
-#         "----------" \
-#         "-----------------" \
-#         "---------------" \
-#         "-----------------" \
-#         "------"
-
-#     local profile
-#     local device
-#     local gateway
-#     local active
-
-#     local default_interface
-# local default_gateway
-
-# default_interface="$(network_default_interface)"
-# default_gateway="$(network_default_gateway)"
-
-# while IFS= read -r profile; do
-
-#     device="$(profile_device "$profile")"
-
-#     gateway="-"
-
-#     if [[ "$device" == "$default_interface" ]]; then
-#         gateway="$default_gateway"
-#     fi
-
-#     if profile_is_active "$profile"; then
-#         active="YES"
-#     else
-#         active="NO"
-#     fi
-
-#     printf "%-10s %-10s %-12s %-18s %-16s %-18s %-10s\n" \
-#         "$profile" \
-#         "$(value_or_dash "$device")" \
-#         "$(value_or_dash "$(network_interface_state "$device")")" \
-#         "$(value_or_dash "$(network_interface_ip "$device")")" \
-#         "$(value_or_dash "$gateway")" \
-#         "$(value_or_dash "$(network_interface_mac "$device")")" \
-#         "$active"
-
-# done < <(profile_list)
-
-# }
 
 
 network_status_summary() {
@@ -157,15 +98,15 @@ network_status_summary() {
     local PROFILE
     local DEVICE
 
-    PROFILE="$(profile_current)"
-    DEVICE="$(profile_device "$PROFILE")"
+    PROFILE="$(state_profile)"
+    DEVICE="$(state_device "$PROFILE")"
 
     echo
 
     log_info "Current Profile   : ${PROFILE:--}"
     log_info "Default Interface : ${DEVICE:--}"
-    log_info "IPv4 Address      : $(value_or_dash "$(network_interface_ip "$DEVICE")")"
-    log_info "Default Gateway   : $(value_or_dash "$(network_default_gateway)")"
+    log_info "IPv4 Address      : $(value_or_dash "$(state_ip "$DEVICE")")"
+    log_info "Default Gateway   : $(value_or_dash "$(state_gateway)")"
 
 }
 
@@ -184,7 +125,7 @@ network_status_health() {
 
     local PROFILE
 
-    PROFILE="$(profile_current)"
+    PROFILE="$(state_profile)"
 
     echo
     log_banner "HEALTH CHECKS"
@@ -201,7 +142,7 @@ network_status_health() {
 
 network_status() {
 
-    log_banner "LABCTL STATUS"
+    ui_start "LABCTL STATUS"
 
     network_status_table
 
@@ -210,5 +151,7 @@ network_status() {
     network_status_routes
 
     network_status_health
+
+    ui_finish
 
 }

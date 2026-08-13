@@ -61,33 +61,6 @@ profile_activate() {
 
 }
 
-# profile_activate() {
-
-#     local PROFILE="$1"
-
-#     log_info "Activating profile: $PROFILE"
-
-#     if ! nmcli --wait 10 connection up "$PROFILE" >/dev/null 2>&1
-#     then
-#         log_error "Failed to activate profile: $PROFILE"
-#         return 1
-#     fi
-
-#     if ! wait_for_profile_up "$PROFILE"
-#     then
-#         log_error "$PROFILE did not become active."
-#         return 1
-#     fi
-
-#     log_success "$PROFILE activated."
-
-#     return 0
-
-# }
-
-
-
-
 ###############################################################################
 # Is Active
 ###############################################################################
@@ -252,35 +225,6 @@ profile_deactivate() {
 
 }
 
-# profile_deactivate() {
-
-#     local PROFILE="$1"
-
-#     if ! profile_is_active "$PROFILE"
-#     then
-#         return 0
-#     fi
-
-#     log_info "Disconnecting profile: $PROFILE"
-
-#     if ! nmcli --wait 10 connection down "$PROFILE" >/dev/null 2>&1
-#     then
-#         log_error "Failed to disconnect $PROFILE"
-#         return 1
-#     fi
-
-#     if ! wait_for_profile_down "$PROFILE"
-#     then
-#         log_error "$PROFILE failed to disconnect."
-#         return 1
-#     fi
-
-#     log_success "$PROFILE disconnected."
-
-#     return 0
-
-# }
-
 ###############################################################################
 # Deactivate All Managed Profiles
 ###############################################################################
@@ -304,7 +248,7 @@ wait_for_profile() {
 
     for ((i=0; i<10; i++)); do
 
-        [[ "$(profile_current)" == "$PROFILE" ]] && return 0
+        [[ "$(state_profile)" == "$PROFILE" ]] && return 0
 
         sleep 1
 
@@ -323,7 +267,7 @@ profile_activate_only() {
     local TARGET="$1"
     local CURRENT
 
-    CURRENT="$(profile_current)"
+    CURRENT="$(state_profile)"
 
     #
     # Already active
@@ -400,6 +344,10 @@ profile_activate_only() {
 
     fi
 
+    refresh_state
+
+    snapshot_create
+
     log_success "Switched to $TARGET."
 
     return 0
@@ -429,60 +377,6 @@ rollback_profile() {
     return 1
 
 }
-
-# profile_activate_only() {
-
-#     local TARGET="$1"
-#     local CURRENT
-
-#     CURRENT="$(profile_current || true)"
-
-#     #
-#     # Already active
-#     #
-#     if [[ "$CURRENT" == "$TARGET" ]]
-#     then
-#         log_info "$TARGET is already active."
-#         return 0
-#     fi
-
-#     #
-#     # Disconnect current profile
-#     #
-#     if [[ -n "$CURRENT" ]]
-#     then
-#         profile_deactivate "$CURRENT" || return 1
-#     fi
-
-#     #
-#     # Activate target
-#     #
-#     if profile_activate "$TARGET"
-#     then
-#         log_success "Switched to $TARGET."
-#         return 0
-#     fi
-
-#     #
-#     # Rollback
-#     #
-#     log_warning "Activation failed."
-
-#     if [[ -n "$CURRENT" ]]
-#     then
-#         log_warning "Restoring previous profile..."
-
-#         if profile_activate "$CURRENT"
-#         then
-#             log_success "Rollback successful."
-#         else
-#             log_error "Rollback failed."
-#         fi
-#     fi
-
-#     return 1
-
-# }
 
 
 ###############################################################################
@@ -610,27 +504,6 @@ profile_repair() {
         connection.interface-name "$EXPECTED"
 
 }
-
-# profile_repair() {
-
-#     local PROFILE="$1"
-#     local EXPECTED
-
-#     EXPECTED="$(profile_expected_device "$PROFILE")"
-
-#     log_info "Repairing $PROFILE..."
-
-#     if nmcli connection modify \
-#         "$PROFILE" \
-#         connection.interface-name "$EXPECTED"
-#     then
-#         log_success "$PROFILE repaired."
-#     else
-#         log_error "Failed to repair $PROFILE."
-#         return 1
-#     fi
-
-# }
 
 
 ###############################################################################

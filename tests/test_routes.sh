@@ -4,6 +4,6 @@ source "$(dirname "$0")/../lib/core/bootstrap.sh"
 
 network_routes >/dev/null
 
-network_default_interface >/dev/null
+state_connection >/dev/null
 
-network_default_gateway >/dev/null
+state_gateway >/dev/null

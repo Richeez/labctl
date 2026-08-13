@@ -11,6 +11,14 @@ run() {
 
     require_root
 
+    cache_ensure || {
+
+        log_error "Unable to initialize cache."
+
+        return "$EXIT_FAILURE"
+
+    }
+
     network_contain
 
     # info "Contain mode enabled."

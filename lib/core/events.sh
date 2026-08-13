@@ -1,30 +1,30 @@
-#!/bin/bash
+# #!/bin/bash
 
-###############################################################################
-# Event Bus
-###############################################################################
+# ###############################################################################
+# # Event Bus
+# ###############################################################################
 
-declare -A LABCTL_EVENT_HANDLERS
+# declare -A LABCTL_EVENT_HANDLERS
 
-event_register() {
+# event_register() {
 
-    local EVENT="$1"
-    local HANDLER="$2"
+#     local EVENT="$1"
+#     local HANDLER="$2"
 
-    LABCTL_EVENT_HANDLERS["$EVENT"]+="$HANDLER "
-}
+#     LABCTL_EVENT_HANDLERS["$EVENT"]+="$HANDLER "
+# }
 
-event_emit() {
+# event_emit() {
 
-    local EVENT="$1"
-    shift
+#     local EVENT="$1"
+#     shift
 
-    local HANDLERS="${LABCTL_EVENT_HANDLERS[$EVENT]}"
+#     local HANDLERS="${LABCTL_EVENT_HANDLERS[$EVENT]}"
 
-    for HANDLER in $HANDLERS
-    do
-        if declare -F "$HANDLER" >/dev/null; then
-            "$HANDLER" "$@"
-        fi
-    done
-}
+#     for HANDLER in $HANDLERS
+#     do
+#         if declare -F "$HANDLER" >/dev/null; then
+#             "$HANDLER" "$@"
+#         fi
+#     done
+# }

@@ -2,16 +2,12 @@
 
 set -Eeuo pipefail
 
-###############################################################################
-# Locate Project Root
-###############################################################################
-LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export LABCTL_HOME
 
 ###############################################################################
 # Bootstrap
 ###############################################################################
-
+# source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib/core" && pwd)/home.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/core/home.sh"
 source "$LABCTL_HOME/lib/core/bootstrap.sh"
 
 ###############################################################################
@@ -23,33 +19,126 @@ load_command() {
     local command="$1"
     local file="$COMMAND_DIR/${command}.sh"
 
-    if [[ ! -f "$file" ]]; then
-        log_error "Unknown command: $command"
+
+    ###########################################################################
+    # Validate command
+    ###########################################################################
+
+    if [[ -z "$command" ]]; then
+
+        log_error "No command specified."
+
         echo
+
         help
-        exit 1
+
+        return "$EXIT_INVALID_ARGUMENT"
+
     fi
+
+
+    ###########################################################################
+    # Locate command
+    ###########################################################################
+
+    if [[ ! -f "$file" ]]; then
+
+        log_error "Unknown command: $command"
+
+        echo
+
+        help
+
+        return "$EXIT_INVALID_ARGUMENT"
+
+    fi
+
+
+    ###########################################################################
+    # Remove previous command handler
+    #
+    # Every command provides its own run() function.
+    ###########################################################################
 
     unset -f run 2>/dev/null || true
 
-    source "$file"
 
-    if ! declare -F run >/dev/null; then
-        log_error "Command '$command' does not define run()."
-        exit 1
+    ###########################################################################
+    # Load command
+    ###########################################################################
+
+    if ! source "$file"; then
+
+        log_error "Failed to load command: $command"
+
+        unset -f run 2>/dev/null || true
+
+        return "$EXIT_FAILURE"
+
     fi
 
+
+    ###########################################################################
+    # Verify command handler
+    ###########################################################################
+
+    if ! declare -F run >/dev/null; then
+
+        log_error "Command '$command' does not define run()."
+
+        unset -f run 2>/dev/null || true
+
+        return "$EXIT_CONFIGURATION_ERROR"
+
+    fi
+
+
+    ###########################################################################
+    # Success
+    ###########################################################################
+
+    return "$EXIT_SUCCESS"
+
 }
+
+# load_command() {
+
+#     local command="$1"
+#     local file="$COMMAND_DIR/${command}.sh"
+
+#     if [[ ! -f "$file" ]]; then
+#         log_error "Unknown command: $command"
+#         echo
+#         help
+#         return "$EXIT_INVALID_ARGUMENT"
+#     fi
+
+#     unset -f run 2>/dev/null || true
+
+#     source "$file"
+
+#     if ! declare -F run >/dev/null; then
+#         log_error "Command '$command' does not define run()."
+#         exit 1
+#     fi
+
+# }
 
 ###############################################################################
 # Built-in Commands
 ###############################################################################
 
 help() {
+    # install_summary
 
 #     for i in eth0 eth1 eth2 eth3; do
 #     echo "$i -> $(cat /sys/class/net/$i/address)"
 # done
+
+#  SRC = source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib/core" && pwd)/home.sh"
+#  BOOST = source lib/core/bootstrap.sh
+# echo "$SRC"
+# echo "$BOOST"
 
 cat <<EOF
 LABCTL v${VERSION}
@@ -63,12 +152,25 @@ Commands
     version     Show version
     status      Show network status
     doctor      Verify networking health
+    doctor --repair
     test        Test all logics effectively
+    repair
 
     update      Internet mode (NAT)
     contain     Containment mode (NAT Network)
     lab         Internal lab
     bridged     Bridged network
+
+    install     Setup Labctl
+    uninstall   Remove Labctl
+    uninstall --purge
+    update      Update Labctl
+
+    cache status
+    cache clear
+    cache rebuild
+
+
 
 Examples
 
@@ -92,33 +194,80 @@ version() {
 # Main
 ###############################################################################
 
-main() {
+# main() {
 
-    local command="${1:-help}"
+#     local command="${1:-help}"
 
-    case "$command" in
+#     case "$command" in
 
-        help|-h|--help)
+#         help|-h|--help)
 
-            help
-            ;;
+#             help
+#             ;;
 
-        version|-v|--version)
 
-            version
-            ;;
+#         version|-v|--version)
 
-        *)
+#             version
+#             ;;
 
-            load_command "$command"
 
-            shift || true
+#         install|update|uninstall|doctor|repair|cache)
 
-            run "$@"
-            ;;
+#             load_command "$command" || return $?
+            
 
-    esac
 
+#             shift || true
+
+#             run "$@"
+
+#             ;;
+
+
+#         *)
+
+#             log_error "Unknown command: $command"
+
+#             echo
+
+#             help
+
+#             return "$EXIT_INVALID_ARGUMENT"
+
+#             ;;
+
+#     esac
+
+# }
+
+main(){
+
+local command="${1:-help}"
+
+case "$command" in
+
+    help|-h|--help)
+
+        help
+        ;;
+
+    version|-v|--version)
+
+        version
+        ;;
+
+    *)
+    
+
+        load_command "$command" || return $?
+
+        shift || true
+
+        run "$@"
+        ;;
+
+esac
 }
 
 main "$@"

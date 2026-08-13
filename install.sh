@@ -1,8 +1,43 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ###############################################################################
-# # LABCTL Installer
-# ###############################################################################
+set -Eeuo pipefail
+
+# LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# export LABCTL_HOME
+
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib/core" && pwd)/home.sh"
+source lib/core/bootstrap.sh
+
+logo_print
+
+system_install || {
+
+    system_rollback
+
+    exit 1
+
+}
+
+ui_start "Verifying installation"
+
+system_verify
+
+ui_finish
+
+echo
+log_success "LABCTL installed successfully."
+
+# echo
+# banner
+
+echo
+echo "Run:"
+echo
+echo "labctl version"
+# # ###############################################################################
+# # # LABCTL Installer
+# # ###############################################################################
 
 # set -euo pipefail
 
@@ -44,14 +79,16 @@
 # echo
 # echo "Installation Complete."
 # echo
+# banner
+# echo 
 # echo "Run:"
 # echo
 # echo "labctl version"
 
 
 
-set -e
+# # set -e
 
-echo "LABCTL installer"
+# # echo "LABCTL installer"
 
-echo "Installation is not implemented yet."
+# # echo "Installation is not implemented yet."

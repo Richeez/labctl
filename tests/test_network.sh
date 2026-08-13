@@ -2,6 +2,6 @@
 
 source "$(dirname "$0")/../lib/core/bootstrap.sh"
 
-profile_current >/dev/null
+state_profile >/dev/null
 
 network_status_summary >/dev/null

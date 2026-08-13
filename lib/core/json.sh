@@ -1,48 +1,48 @@
-#!/bin/bash
+# #!/bin/bash
 
-###############################################################################
-# JSON State Engine
-###############################################################################
+# ###############################################################################
+# # JSON State Engine
+# ###############################################################################
 
-STATE_DIR="/var/lib/labctl"
+# STATE_DIR="/var/lib/labctl"
 
-STATE_FILE="$STATE_DIR/state.json"
+# STATE_FILE="$STATE_DIR/state.json"
 
-init_state() {
+# init_state() {
 
-    mkdir -p "$STATE_DIR"
+#     mkdir -p "$STATE_DIR"
 
-    if [[ ! -f "$STATE_FILE" ]]; then
+#     if [[ ! -f "$STATE_FILE" ]]; then
 
-cat > "$STATE_FILE" <<EOF
-{
-    "mode":"",
-    "last_switch":"",
-    "default_interface":"",
-    "inventory":[]
-}
-EOF
+# cat > "$STATE_FILE" <<EOF
+# {
+#     "mode":"",
+#     "last_switch":"",
+#     "default_interface":"",
+#     "inventory":[]
+# }
+# EOF
 
-    fi
+#     fi
 
-}
+# }
 
-json_get() {
+# json_get() {
 
-    jq -r "$1" "$STATE_FILE"
+#     jq -r "$1" "$STATE_FILE"
 
-}
+# }
 
-json_set() {
+# json_set() {
 
-    local FILTER="$1"
+#     local FILTER="$1"
 
-    local TMP
+#     local TMP
 
-    TMP=$(mktemp)
+#     TMP=$(mktemp)
 
-    jq "$FILTER" "$STATE_FILE" > "$TMP"
+#     jq "$FILTER" "$STATE_FILE" > "$TMP"
 
-    mv "$TMP" "$STATE_FILE"
+#     mv "$TMP" "$STATE_FILE"
 
-}
+# }

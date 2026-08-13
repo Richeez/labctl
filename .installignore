@@ -1,0 +1,17 @@
+.git/
+.github/
+.gitignore
+
+.vscode/
+.idea/
+
+tests/
+logs/
+coverage/
+
+install/
+
+*.log
+*.tmp
+*.swp
+.DS_Store

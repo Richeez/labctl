@@ -25,7 +25,7 @@ verify_active_profile() {
     local PROFILE
     local DEVICE
 
-    PROFILE="$(profile_current)"
+    PROFILE="$(state_profile)"
 
     if [[ -z "$PROFILE" ]]; then
         log_error "No active profile."
@@ -81,21 +81,21 @@ verify_ip_address() {
     local DEVICE
     local IP
 
-    PROFILE="$(profile_current)"
+    PROFILE="$(state_profile)"
 
     [[ -n "$PROFILE" ]] || {
         log_error "No active profile."
         return 1
     }
 
-    DEVICE="$(profile_device "$PROFILE")"
+    DEVICE="$(state_device "$PROFILE")"
 
     [[ -n "$DEVICE" ]] || {
         log_error "No associated interface."
         return 1
     }
 
-    IP="$(network_interface_ip "$DEVICE")"
+    IP="$(state_ip "$DEVICE")"
 
     if [[ -n "$IP" ]]; then
         log_success "IPv4 address detected: $IP"
@@ -131,7 +131,7 @@ verify_gateway() {
 
     local GATEWAY
 
-    GATEWAY="$(network_default_gateway)"
+    GATEWAY="$(state_gateway)"
 
     if [[ -n "$GATEWAY" ]]; then
         log_success "Gateway detected: $GATEWAY"
@@ -199,7 +199,7 @@ verify_all() {
     local PROFILE
     local DEVICE
 
-    PROFILE="$(profile_current)"
+    PROFILE="$(state_profile)"
 
     if [[ -n "$PROFILE" ]]; then
         DEVICE="$(profile_active_device "$PROFILE")"
