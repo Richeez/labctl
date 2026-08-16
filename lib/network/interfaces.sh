@@ -160,3 +160,12 @@ network_interface_mac() {
         '
 
 }
+
+
+# Return CIDR
+interface_cidr() {
+    local IFACE="$1"
+
+    ip -4 addr show "$IFACE" \
+        | awk '/inet / {print $2}'
+}

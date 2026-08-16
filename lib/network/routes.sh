@@ -97,3 +97,12 @@ network_flush_default_routes() {
     log_success "Default routes cleared."
 
 }
+
+###############################################################################
+# Default Route
+###############################################################################
+
+network_default_route() {
+
+    ip route show default 2>/dev/null
+}

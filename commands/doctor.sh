@@ -238,8 +238,11 @@ EOF
     ###########################################################################
 
     local CURRENT_PROFILE
+    local DEVICE
 
     CURRENT_PROFILE="$(state_profile)"
+    DEVICE="$(state_device)"
+
 
 
     if [[ -z "$CURRENT_PROFILE" ]]; then
@@ -277,15 +280,33 @@ EOF
     fi
 
 
-    ###########################################################################
-    # Interfaces
-    ###########################################################################
+    
 
-    if ! verify_interface; then
+    if [[ -z "$DEVICE" ]]; then
+
+        log_error "No active interface."
 
         ((++FAILED))
 
+    else
+
+        log_info "Active interface: $DEVICE"
+
+        ###########################################################################
+        # Interfaces
+        ###########################################################################
+
+
+        if ! verify_interface "$DEVICE"; then
+
+            ((++FAILED))
+
+        fi
+
     fi
+
+
+    
 
 
     ###########################################################################

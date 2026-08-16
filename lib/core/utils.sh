@@ -417,3 +417,144 @@ verify_summary() {
     log_success "Installation verified."
 
 }
+
+#!/bin/bash
+
+###############################################################################
+# USE LATER
+###############################################################################
+
+# CONFIG_FILE="/etc/labctl/config.json"
+
+# if [[ ! -f "$CONFIG_FILE" ]]; then
+#     echo "Missing configuration."
+
+#     exit 1
+# fi
+
+# VERSION=$(jq -r '.version' "$CONFIG_FILE")
+
+# LOG_LEVEL=$(jq -r '.logging.level' "$CONFIG_FILE")
+
+# LOG_FILE=$(jq -r '.logging.file' "$CONFIG_FILE")
+
+# NAT_DEV=$(jq -r '.interfaces.nat' "$CONFIG_FILE")
+
+# HOSTONLY_DEV=$(jq -r '.interfaces.hostonly' "$CONFIG_FILE")
+
+# BRIDGED_DEV=$(jq -r '.interfaces.bridged' "$CONFIG_FILE")
+
+# CONTAIN_DEV=$(jq -r '.interfaces.contain' "$CONFIG_FILE")
+
+# DHCP_TIMEOUT=$(jq -r '.timeouts.dhcp' "$CONFIG_FILE")
+
+# PING_TIMEOUT=$(jq -r '.timeouts.ping' "$CONFIG_FILE")
+
+# DNS_TARGET=$(jq -r '.network.dns' "$CONFIG_FILE")
+
+# PING_TARGET=$(jq -r '.network.internet_check' "$CONFIG_FILE")
+
+# use cases
+# json_set ".mode=\"$TARGET\""
+#     json_set ".last_switch=\"$(timestamp)\""
+#     json_set ".default_interface=\"$DEVICE\""
+# echo "Default Interface : $(default_interface)"
+#     echo "Gateway           : $(default_gateway)"
+#     echo "Current Mode      : $(json_get '.mode')"
+#     echo "Last Switch       : $(json_get '.last_switch')"
+
+# #!/bin/bash
+
+# ###############################################################################
+# # LABCTL Installer
+# ###############################################################################
+
+# set -euo pipefail
+
+# INSTALL_DIR="/opt/labctl"
+# BIN_LINK="/usr/local/bin/labctl"
+
+# echo "=========================================="
+# echo "Installing LABCTL..."
+# echo "=========================================="
+
+# # Root check
+# if [[ "$EUID" -ne 0 ]]; then
+#     echo "Please run with sudo."
+#     exit 1
+# fi
+
+# # Create required directories
+# mkdir -p "$INSTALL_DIR"
+# mkdir -p /etc/labctl
+# mkdir -p /var/log/labctl
+# mkdir -p /var/lib/labctl
+# mkdir -p /var/cache/labctl
+
+# # Copy project
+# cp -R ./* "$INSTALL_DIR"
+
+# # Default configuration
+# if [[ ! -f /etc/labctl/config.json ]]; then
+#     cp config/default.json /etc/labctl/config.json
+# fi
+
+# # Permissions
+# find "$INSTALL_DIR" -type f -name "*.sh" -exec chmod +x {} \;
+# chmod +x "$INSTALL_DIR/bin/labctl"
+
+# # Symbolic link
+# ln -sf "$INSTALL_DIR/bin/labctl" "$BIN_LINK"
+
+# echo
+# echo "Installation Complete."
+# echo
+# echo "Run:"
+# echo
+# echo "labctl version"
+
+
+# PROJECT=labctl
+
+# PREFIX=/opt/labctl
+
+# install:
+# 	sudo ./install.sh
+
+# uninstall:
+# 	sudo ./uninstall.sh
+
+# lint:
+# 	shellcheck $$(find . -name "*.sh")
+
+# format:
+# 	shfmt -w .
+
+# test:
+# 	./tests/run_tests.sh
+
+# coverage:
+# 	kcov coverage ./tests/run_tests.sh
+
+# clean:
+# 	rm -rf coverage
+# 	rm -rf cache
+
+# help:
+# 	@echo "make install"
+# 	@echo "make uninstall"
+# 	@echo "make test"
+# 	@echo "make coverage"
+# 	@echo "make lint"
+# 	@echo "make format"
+
+# FORMATTING
+
+# Install
+# sudo snap install shfmt
+
+# LINTING
+
+# Install
+
+# sudo apt install shellcheck

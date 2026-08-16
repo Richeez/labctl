@@ -40,12 +40,12 @@ network_status_table() {
     local DEFAULT_GATEWAY
 
     DEFAULT_IFACE="$(network_default_interface)"
-    DEFAULT_GATEWAY="$(state_gateway)"
+    DEFAULT_GATEWAY="$(network_default_gateway)"
 
     while IFS= read -r PROFILE
     do
 
-        DEVICE="$(state_device "$PROFILE")"
+        DEVICE="$(profile_device "$PROFILE")"
 
         #
         # Profile not currently attached to a device
@@ -60,9 +60,9 @@ network_status_table() {
 
         else
 
-            LINK="$(state_connection "$DEVICE")"
-            IP="$(state_ip "$DEVICE")"
-            MAC="$(state_mac "$DEVICE")"
+            LINK="$(network_interface_state "$DEVICE")"
+            IP="$( network_interface_ip "$DEVICE")"
+            MAC="$(network_interface_mac "$DEVICE")"
 
             if [[ "$DEVICE" == "$DEFAULT_IFACE" ]]; then
                 GATEWAY="$DEFAULT_GATEWAY"
