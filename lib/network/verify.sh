@@ -77,25 +77,28 @@ verify_interface() {
 
 verify_ip_address() {
 
-    local PROFILE
-    local DEVICE
+    local DEVICE="${1:-}"
     local IP
 
-    PROFILE="$(state_profile)"
+    if [[ -z "$DEVICE" ]]; then
+        local PROFILE
 
-    [[ -n "$PROFILE" ]] || {
-        log_error "No active profile."
-        return 1
-    }
+        PROFILE="$(state_profile)"
 
-    DEVICE="$(state_device "$PROFILE")"
+        [[ -n "$PROFILE" ]] || {
+            log_error "No active profile."
+            return 1
+        }
 
-    [[ -n "$DEVICE" ]] || {
-        log_error "No associated interface."
-        return 1
-    }
+        DEVICE="$(profile_active_device "$PROFILE")"
 
-    IP="$(state_ip "$DEVICE")"
+        [[ -n "$DEVICE" ]] || {
+            log_error "No associated interface."
+            return 1
+        }
+    fi
+
+    IP="$(network_interface_ip "$DEVICE")"
 
     if [[ -n "$IP" ]]; then
         log_success "IPv4 address detected: $IP"
@@ -131,7 +134,7 @@ verify_gateway() {
 
     local GATEWAY
 
-    GATEWAY="$(state_gateway)"
+    GATEWAY="$(network_default_gateway)"
 
     if [[ -n "$GATEWAY" ]]; then
         log_success "Gateway detected: $GATEWAY"
@@ -278,7 +281,7 @@ verify_lab() {
     local DEVICE="$1"
 
     verify_interface "$DEVICE" &&
-    verify_ip_address
+    verify_ip_address "$DEVICE"
 
 }
 
@@ -287,7 +290,7 @@ verify_bridged() {
     local DEVICE="$1"
 
     verify_interface "$DEVICE" &&
-    verify_ip_address &&
+    verify_ip_address "$DEVICE" &&
     verify_default_route &&
     verify_gateway
 
@@ -298,7 +301,7 @@ verify_natnet() {
     local DEVICE="$1"
 
     verify_interface "$DEVICE" &&
-    verify_ip_address &&
+    verify_ip_address "$DEVICE" &&
     verify_default_route &&
     verify_gateway
 
@@ -309,7 +312,7 @@ verify_nat() {
     local DEVICE="$1"
 
     verify_interface "$DEVICE" &&
-    verify_ip_address &&
+    verify_ip_address "$DEVICE" &&
     verify_default_route &&
     verify_gateway &&
     verify_dns &&

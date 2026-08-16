@@ -65,9 +65,17 @@ network_switch() {
 
 # }
 
-network_update() {
+network_internet() {
 
     network_switch "$PROFILE_NAT"
+
+}
+
+# Compatibility for internal callers.  The CLI name is `network internet` so
+# it cannot be confused with the application update command.
+network_update() {
+
+    network_internet
 
 }
 
@@ -88,4 +96,3 @@ network_bridged() {
     network_switch "$PROFILE_BRIDGED"
 
 }
-

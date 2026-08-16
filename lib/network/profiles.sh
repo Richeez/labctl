@@ -81,7 +81,7 @@ profile_device() {
 
     local profile="$1"
 
-    nmcli -t -f NAME,DEVICE connection show \
+    nmcli -t -f NAME,DEVICE connection show --active \
         | awk -F: -v p="$profile" '
             $1==p {
                 print $2
@@ -221,6 +221,11 @@ profile_deactivate() {
         return 1
     fi
 
+    if ! wait_for_profile_down "$PROFILE"; then
+        log_error "Timed out waiting for '$PROFILE' to disconnect."
+        return 1
+    fi
+
     log_success "$PROFILE disconnected."
 
 }
@@ -231,13 +236,29 @@ profile_deactivate() {
 
 profile_deactivate_all() {
 
+    profile_deactivate_all_except
+
+}
+
+###############################################################################
+# Deactivate All Managed Profiles Except One
+###############################################################################
+
+profile_deactivate_all_except() {
+
+    local KEEP="${1:-}"
+
     local PROFILE
+    local FAILED=0
 
     while IFS= read -r PROFILE
     do
+        [[ "$PROFILE" == "$KEEP" ]] && continue
         profile_is_active "$PROFILE" || continue
-        profile_deactivate "$PROFILE"
+        profile_deactivate "$PROFILE" || FAILED=1
     done < <(profile_list)
+
+    return "$FAILED"
 
 }
 
@@ -248,13 +269,41 @@ wait_for_profile() {
 
     for ((i=0; i<10; i++)); do
 
-        [[ "$(state_profile)" == "$PROFILE" ]] && return 0
+        profile_is_active "$PROFILE" && return 0
 
         sleep 1
 
     done
 
     return 1
+
+}
+
+###############################################################################
+# Verify Exclusive Managed Profile
+###############################################################################
+
+profile_is_only_active() {
+
+    local TARGET="$1"
+    local PROFILE
+
+    if ! profile_is_active "$TARGET"; then
+        log_error "Target profile '$TARGET' is not active."
+        return 1
+    fi
+
+    while IFS= read -r PROFILE
+    do
+        [[ "$PROFILE" == "$TARGET" ]] && continue
+
+        if profile_is_active "$PROFILE"; then
+            log_error "Managed profile '$PROFILE' is still active."
+            return 1
+        fi
+    done < <(profile_list)
+
+    return 0
 
 }
 
@@ -266,36 +315,27 @@ profile_activate_only() {
 
     local TARGET="$1"
     local CURRENT
+    local TARGET_WAS_ACTIVE=0
 
-    CURRENT="$(state_profile)"
+    # Use NetworkManager's live state; the runtime cache may describe a
+    # previous switch or mask additional active managed profiles.
+    CURRENT="$(profile_current || true)"
 
-    #
-    # Already active
-    #
     if [[ "$CURRENT" == "$TARGET" ]]; then
-        log_info "$TARGET is already active."
-        return 0
+        TARGET_WAS_ACTIVE=1
     fi
 
     log_info "Current profile : ${CURRENT:-None}"
     log_info "Target profile  : $TARGET"
 
-    #
-    # Disconnect current profile
-    #
-    if [[ -n "$CURRENT" ]]; then
-
-        if ! profile_deactivate "$CURRENT"; then
-            log_error "Failed to disconnect '$CURRENT'."
-            return 1
-        fi
-
+    # Remove every non-target managed profile, including any that were not
+    # represented by CURRENT.  Do not proceed if NetworkManager keeps one up.
+    if ! profile_deactivate_all_except "$TARGET"; then
+        log_error "Failed to disconnect all non-target managed profiles."
+        return 1
     fi
 
-    #
-    # Activate target profile
-    #
-    if ! profile_activate "$TARGET"; then
+    if ! profile_is_active "$TARGET" && ! profile_activate "$TARGET"; then
 
         log_error "Failed to activate '$TARGET'."
 
@@ -305,40 +345,41 @@ profile_activate_only() {
 
     fi
 
-    #
-    # Wait for NetworkManager to mark the profile active
-    #
     if ! wait_for_profile "$TARGET"; then
 
         log_error "Timed out waiting for '$TARGET' to become active."
 
-        rollback_profile "$CURRENT"
+        (( TARGET_WAS_ACTIVE )) || rollback_profile "$CURRENT"
 
         return 1
 
     fi
 
-    #
-    # Wait until the active connection has a device
-    #
     if ! wait_for_device "$TARGET"; then
 
         log_error "No active device found for '$TARGET'."
 
-        rollback_profile "$CURRENT"
+        (( TARGET_WAS_ACTIVE )) || rollback_profile "$CURRENT"
 
         return 1
 
     fi
 
-    #
-    # Verify the profile is actually usable
-    #
+    if ! profile_is_only_active "$TARGET"; then
+
+        log_error "Managed profiles are not exclusive after switching."
+
+        (( TARGET_WAS_ACTIVE )) || rollback_profile "$CURRENT"
+
+        return 1
+
+    fi
+
     if ! verify_profile "$TARGET"; then
 
         log_error "Verification failed."
 
-        rollback_profile "$CURRENT"
+        (( TARGET_WAS_ACTIVE )) || rollback_profile "$CURRENT"
 
         return 1
 
@@ -358,13 +399,26 @@ rollback_profile() {
 
     local PROFILE="$1"
 
-    [[ -z "$PROFILE" ]] && return 1
+    if [[ -z "$PROFILE" ]]; then
+        profile_deactivate_all
+        return 0
+    fi
 
     log_warning "Rolling back..."
 
-    if profile_activate "$PROFILE"; then
+    # The attempted target may still be active after a post-activation
+    # failure.  Stop it before restoring the previous profile.
+    if ! profile_deactivate_all_except "$PROFILE"; then
+        log_error "Unable to clear attempted profile during rollback."
+        return 1
+    fi
 
-        wait_for_profile "$PROFILE"
+    if profile_is_active "$PROFILE" || profile_activate "$PROFILE"; then
+
+        if ! wait_for_profile "$PROFILE" || ! profile_is_only_active "$PROFILE"; then
+            log_error "Rollback did not restore an exclusive profile."
+            return 1
+        fi
 
         log_success "Rollback successful."
 
@@ -418,14 +472,16 @@ profile_expected_device() {
 profile_validate() {
 
     local PROFILE="$1"
+    local INTERFACE
 
-    local EXPECTED
-    local ACTUAL
+    INTERFACE="$(profile_interface "$PROFILE")"
 
-    EXPECTED="$(profile_expected_device "$PROFILE")"
-    ACTUAL="$(profile_interface "$PROFILE")"
+    # An empty interface name means NetworkManager may select a compatible
+    # device.  Otherwise, validate the profile against the actual host device
+    # instead of assuming legacy eth0–eth3 names.
+    [[ -z "$INTERFACE" || "$INTERFACE" == "*" ]] && return 0
 
-    [[ "$EXPECTED" == "$ACTUAL" ]]
+    network_interface_exists "$INTERFACE"
 
 }
 
@@ -437,42 +493,36 @@ profile_validate() {
 profile_validate_all() {
 
     local PROFILE
-    local EXPECTED
-    local ACTUAL
+    local INTERFACE
     local FAILED=0
 
-    printf "%-10s %-10s %-10s %-10s\n" \
+    printf "%-10s %-18s %-10s\n" \
         "PROFILE" \
-        "EXPECTED" \
-        "ACTUAL" \
+        "INTERFACE" \
         "STATUS"
 
-    printf "%-10s %-10s %-10s %-10s\n" \
+    printf "%-10s %-18s %-10s\n" \
         "--------" \
-        "--------" \
-        "------" \
+        "-----------------" \
         "------"
 
     while IFS= read -r PROFILE
     do
 
-        EXPECTED="$(profile_expected_device "$PROFILE")"
-        ACTUAL="$(profile_interface "$PROFILE")"
+        INTERFACE="$(profile_interface "$PROFILE")"
 
-        if [[ "$EXPECTED" == "$ACTUAL" ]]; then
+        if profile_validate "$PROFILE"; then
 
-            printf "%-10s %-10s %-10s %-10s\n" \
+            printf "%-10s %-18s %-10s\n" \
                 "$PROFILE" \
-                "$EXPECTED" \
-                "$ACTUAL" \
+                "${INTERFACE:-(automatic)}" \
                 "OK"
 
         else
 
-            printf "%-10s %-10s %-10s %-10s\n" \
+            printf "%-10s %-18s %-10s\n" \
                 "$PROFILE" \
-                "$EXPECTED" \
-                "${ACTUAL:--}" \
+                "${INTERFACE:--}" \
                 "FAIL"
 
             ((++FAILED))

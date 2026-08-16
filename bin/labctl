@@ -156,15 +156,17 @@ Commands
     test        Test all logics effectively
     repair
 
-    update      Internet mode (NAT)
-    contain     Containment mode (NAT Network)
-    lab         Internal lab
-    bridged     Bridged network
+    network     Switch network mode (see: labctl network --help)
+    net         Short network-mode alias; defaults to Internet/NAT
+    contain     Containment mode (NAT Network; legacy shortcut)
+    lab         Internal lab (legacy shortcut)
+    bridged     Bridged network (legacy shortcut)
 
     install     Setup Labctl
     uninstall   Remove Labctl
     uninstall --purge
     update      Update Labctl
+    upgrade     Update Labctl (legacy shortcut)
 
     cache status
     cache clear
@@ -176,7 +178,8 @@ Examples
 
     labctl status
     labctl doctor
-    labctl update
+    labctl network internet
+    sudo labctl net
     labctl contain
 
 EOF

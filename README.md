@@ -37,7 +37,7 @@ sudo ./install.sh
 ## Usage
 
 ```bash
-sudo labctl update
+sudo labctl network internet
 
 sudo labctl contain
 

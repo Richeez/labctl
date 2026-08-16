@@ -6,34 +6,23 @@
 # NetworkManager implementation.
 ###############################################################################
 
-declare -A LABCTL_CONNECTIONS=(
-    [update]="$UPDATE_CONN"
-    [lab]="$LAB_CONN"
-    [bridged]="$BRIDGED_CONN"
-    [contain]="$CONTAIN_CONN"
-)
-
 switch_provider_activate() {
 
     local MODE="$1"
+    local PROFILE
 
-    local PROFILE="${LABCTL_CONNECTIONS[$MODE]}"
+    case "$MODE" in
+        update)  PROFILE="$PROFILE_NAT" ;;
+        contain) PROFILE="$PROFILE_NATNET" ;;
+        lab)     PROFILE="$PROFILE_LAB" ;;
+        bridged) PROFILE="$PROFILE_BRIDGED" ;;
+        *)
+            log_error "Unknown network mode: $MODE"
+            return 1
+            ;;
+    esac
 
-    [[ -n "$PROFILE" ]] || fatal "Unknown mode: $MODE"
-
-    info "Switching to profile: $PROFILE"
-
-    for CONN in "${LABCTL_CONNECTIONS[@]}"
-    do
-        nmcli connection down "$CONN" >/dev/null 2>&1 || true
-    done
-
-    nmcli connection up "$PROFILE"
-
-    sleep 2
-
-    json_set ".mode=\"$MODE\""
-    json_set ".last_switch=\"$(timestamp)\""
+    network_switch "$PROFILE"
 
 }
 
