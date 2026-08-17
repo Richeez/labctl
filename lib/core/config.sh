@@ -7,7 +7,7 @@
 : "${LABCTL_HOME:?LABCTL_HOME is not set}"
 
 readonly NAME="LABCTL"
-readonly VERSION="2.0.0"
+readonly VERSION="1.0.0"
 readonly LABCTL_NAME="$NAME"
 readonly LABCTL_VERSION="$VERSION"
 readonly PROJECT_ROOT="$LABCTL_HOME"
@@ -18,7 +18,7 @@ readonly PROJECT_ROOT="$LABCTL_HOME"
 
 readonly INSTALL_DIR="/opt/labctl"
 
-readonly BIN_DIR="/usr/local/bin"
+readonly BIN_DIR="/usr/bin"
 
 readonly BIN_LINK="$BIN_DIR/labctl"
 
