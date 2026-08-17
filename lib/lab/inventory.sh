@@ -4,11 +4,16 @@
 # Inventory Engine
 ###############################################################################
 
-INVENTORY="/var/lib/labctl/inventory.json"
+inventory_file() {
+    printf '%s/inventory.json\n' "$STATE_DIR"
+}
 
 init_inventory() {
 
-    mkdir -p /var/lib/labctl
+    local INVENTORY
+    INVENTORY="$(inventory_file)"
+
+    mkdir -p "$STATE_DIR" || return 1
 
     [[ -f "$INVENTORY" ]] && return
 
@@ -23,6 +28,10 @@ EOF
 inventory_exists() {
 
     local IP="$1"
+    local INVENTORY
+    INVENTORY="$(inventory_file)"
+
+    init_inventory || return 1
 
     jq -e \
         --arg ip "$IP" \
@@ -46,9 +55,12 @@ inventory_add() {
 
     }
 
-    local TMP
+    local INVENTORY TMP
+    INVENTORY="$(inventory_file)"
 
-    TMP=$(mktemp)
+    init_inventory || return 1
+
+    TMP=$(mktemp "$STATE_DIR/inventory.XXXXXX") || return 1
 
     jq \
         --arg ip "$IP" \
@@ -76,9 +88,12 @@ inventory_update() {
     local HOST="$3"
     local OS="$4"
 
-    local TMP
+    local INVENTORY TMP
+    INVENTORY="$(inventory_file)"
 
-    TMP=$(mktemp)
+    init_inventory || return 1
+
+    TMP=$(mktemp "$STATE_DIR/inventory.XXXXXX") || return 1
 
     jq \
         --arg ip "$IP" \
@@ -98,5 +113,16 @@ end
 ' "$INVENTORY" > "$TMP"
 
     mv "$TMP" "$INVENTORY"
+
+}
+
+inventory_list() {
+
+    local INVENTORY
+    INVENTORY="$(inventory_file)"
+    init_inventory || return 1
+
+    jq -r '.hosts[] | [.ip, .hostname, .mac, .os, .last_seen] | @tsv' "$INVENTORY" |
+        awk 'BEGIN { print "IP\tHOSTNAME\tMAC\tOS\tLAST SEEN" } { print }'
 
 }

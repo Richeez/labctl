@@ -8,6 +8,14 @@ network_switch() {
 
     local PROFILE="$1"
 
+    profile_exists "$PROFILE" || {
+
+        log_error "Unknown profile '$PROFILE'."
+
+        return 1
+
+    }
+
     profile_validate "$PROFILE" || {
 
         log_error "Profile '$PROFILE' is misconfigured."
@@ -17,14 +25,6 @@ network_switch() {
         log_info "Run:"
 
         echo "    sudo labctl doctor --repair"
-
-        return 1
-
-    }
-
-    profile_exists "$PROFILE" || {
-
-        log_error "Unknown profile '$PROFILE'."
 
         return 1
 

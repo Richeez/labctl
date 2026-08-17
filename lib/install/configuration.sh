@@ -26,7 +26,10 @@ config_install() {
 
 }
 
-config_validate() {
+install_config_validate() {
+
+    local KEY
+    local REQUIRED=(DEFAULT_PROFILE PING_TIMEOUT DNS_TARGET INTERNET_TARGET LOG_LEVEL)
 
     [[ -f "$CONFIG_FILE" ]] || {
 
@@ -36,14 +39,18 @@ config_validate() {
 
     }
 
-    source "$CONFIG_FILE"
+    for KEY in "${REQUIRED[@]}"; do
+        grep -q "^${KEY}=" "$CONFIG_FILE" || {
+            log_error "Configuration key is missing: $KEY"
+            return "$EXIT_CONFIGURATION_ERROR"
+        }
+    done
 
-    [[ -n "${NAME:-}" ]] || return 1
-    [[ -n "${VERSION:-}" ]] || return 1
+    return "$EXIT_SUCCESS"
 
 }
 
-config_migrate() {
+install_config_migrate() {
 
     local OLD_VERSION
 
@@ -74,10 +81,10 @@ config_migrate() {
 
 }
 
-config_remove() {
+install_config_remove() {
 
     install_confirm "Remove configuration?" || return 0
 
-    rm -f "$CONFIG_FILE"
+    safe_remove "$CONFIG_FILE"
 
 }

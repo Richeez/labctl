@@ -8,15 +8,21 @@ settings_create() {
 
     mkdir -p "$CONFIG_DIR"
 
+    [[ -f "$CONFIG_FILE" ]] && return "$EXIT_SUCCESS"
+
     cp "$CONFIG_TEMPLATE" "$CONFIG_FILE"
 
 }
 
 settings_load() {
 
-    [[ -f "$CONFIG_FILE" ]] || settings_create
-
-    source "$CONFIG_FILE"
+    if [[ -f "$CONFIG_FILE" ]]; then
+        source "$CONFIG_FILE"
+    else
+        # Commands such as `help` and `version` must not create user state.
+        # Installation is responsible for writing the initial configuration.
+        source "$CONFIG_TEMPLATE"
+    fi
 
 }
 
@@ -36,9 +42,13 @@ settings_set() {
 
     local VALUE="$2"
 
-    sed -i \
-        "s|^${KEY}=.*|${KEY}=${VALUE}|" \
-        "$CONFIG_FILE"
+    settings_create || return $?
+
+    if grep -q "^${KEY}=" "$CONFIG_FILE"; then
+        sed -i "s|^${KEY}=.*|${KEY}=${VALUE}|" "$CONFIG_FILE"
+    else
+        printf '%s=%s\n' "$KEY" "$VALUE" >> "$CONFIG_FILE"
+    fi
 
 }
 
@@ -54,6 +64,16 @@ settings_reset() {
     rm -f "$CONFIG_FILE"
 
     settings_create
+
+}
+
+settings_unset() {
+
+    local KEY="$1"
+
+    [[ -f "$CONFIG_FILE" ]] || return "$EXIT_SUCCESS"
+
+    sed -i "/^${KEY}=/d" "$CONFIG_FILE"
 
 }
 

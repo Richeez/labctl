@@ -27,11 +27,13 @@ logger_write_file() {
 
     local message="$*"
 
+    mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || return 0
+
     printf "[%s] [%s] %s\n" \
         "$(logger_timestamp)" \
         "$level" \
         "$message" \
-        >> "$LOG_FILE"
+        >> "$LOG_FILE" 2>/dev/null || true
 
 }
 

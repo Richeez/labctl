@@ -6,7 +6,11 @@
 
 export_csv() {
 
-    local FILE="$HOME/lab_inventory.csv"
+    local FILE="${1:-$HOME/lab_inventory.csv}"
+    local INVENTORY
+    INVENTORY="$(inventory_file)"
+
+    init_inventory || return 1
 
     echo "IP,HOSTNAME,OS" > "$FILE"
 
@@ -18,6 +22,6 @@ export_csv() {
 
     ' "$INVENTORY" >> "$FILE"
 
-    success "Inventory exported to $FILE"
+    log_success "Inventory exported to $FILE"
 
 }

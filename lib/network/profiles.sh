@@ -334,6 +334,9 @@ profile_activate_only() {
         log_error "Failed to disconnect all non-target managed profiles."
         return 1
     fi
+    
+    snapshot_create
+
 
     if ! profile_is_active "$TARGET" && ! profile_activate "$TARGET"; then
 
@@ -387,7 +390,7 @@ profile_activate_only() {
 
     refresh_state
 
-    snapshot_create
+    # snapshot_create
 
     log_success "Switched to $TARGET."
 

@@ -1,11 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-run(){
+run() {
 
-require_root
+    case "${1:-}" in
+        -h|--help|"")
+            cat <<EOF
+Usage: sudo labctl scan <target>
 
-[[ -z "$1" ]] && fatal "Specify target."
+Run service and operating-system detection against a single target.
+EOF
+            return "$EXIT_SUCCESS"
+            ;;
+    esac
 
-scan_services "$1"
+    require_root || return $?
+
+    scan_services "$1"
 
 }

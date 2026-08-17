@@ -8,6 +8,8 @@
 
 readonly NAME="LABCTL"
 readonly VERSION="2.0.0"
+readonly LABCTL_NAME="$NAME"
+readonly LABCTL_VERSION="$VERSION"
 readonly PROJECT_ROOT="$LABCTL_HOME"
 
 ###############################################################################
@@ -67,6 +69,8 @@ readonly MANIFEST="$STATE_DIR/install.manifest"
 readonly INSTALL_IGNORE="$PROJECT_ROOT/.installignore"
 
 readonly METADATA="$STATE_DIR/install.json"
+
+readonly SNAPSHOT_DIR="$STATE_DIR/snapshots"
 
 ###############################################################################
 # Internal Directories
@@ -139,6 +143,7 @@ readonly INSTALL_EXCLUDES=(
 
 readonly REQUIRED_COMMANDS=(
     bash
+    rsync
     nmcli
     ip
     awk
@@ -151,6 +156,8 @@ readonly REQUIRED_COMMANDS=(
 
 readonly INSTALL_WORKFLOW=(
 
+    "Acquiring lock:lock_acquire"
+
     "Checking dependencies:dependencies_check"
 
     "Creating directories:directories_create"
@@ -161,11 +168,23 @@ readonly INSTALL_WORKFLOW=(
 
     "Installing completions:completion_install"
 
-    "Creating configuration:settings_create"
+    "Installing configuration:config_install"
 
     "Applying permissions:permissions_fix"
 
-    "Verifying installation:system_verify"
+    "Creating cache:cache_install"
+
+    "Creating runtime state:state_install"
+
+    "Creating configuration:settings_create"
+
+    "Creating manifest:manifest_create"
+
+     "Writing version:version_write"
+
+    "Verifying installation:verify_installation"
+    
+    "Remove lock file:lock_release"
 
 )
 
@@ -199,13 +218,13 @@ readonly UPDATE_WORKFLOW=(
 
     "Updating completions:completion_install"
 
-    "Migrating configuration:settings_migrate"
+    "Preserving configuration:settings_migrate"
 
     "Applying permissions:permissions_fix"
 
-    "Refreshing cache:cache_rebuild"
+    "Writing installation manifest:manifest_create"
 
-    "Refreshing state:refresh_state"
+    "Writing version metadata:version_write"
 
     "Verifying installation:system_verify"
 

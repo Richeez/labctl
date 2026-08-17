@@ -60,7 +60,7 @@ verify_configuration() {
         return "$EXIT_CONFIGURATION_ERROR"
     }
 
-    config_validate
+    install_config_validate
 
 }
 

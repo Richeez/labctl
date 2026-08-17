@@ -1,31 +1,5 @@
 #!/usr/bin/env bash
 
-
-###############################################################################
-# Launcher
-###############################################################################
-
-# launcher_install() {
-
-#     filesystem_symlink \
-#         "$INSTALL_DIR/bin/labctl" \
-#         "$BIN_LINK"
-
-# }
-
-# launcher_remove() {
-
-#     rm -f "$BIN_LINK"
-
-# }
-
-# launcher_verify() {
-
-#     [[ -L "$BIN_LINK" ]]
-
-# }
-
-
 ###############################################################################
 # Installer Lock
 ###############################################################################
@@ -52,7 +26,7 @@ lock_acquire() {
 
 lock_release() {
 
-    rm -f "$INSTALL_LOCK"
+    safe_remove "$INSTALL_LOCK"
 
 }
 

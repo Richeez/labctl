@@ -15,7 +15,7 @@ require_root() {
     if [[ $EUID -ne 0 ]]
     then
         log_error "Please run with sudo."
-        exit 1
+        return "$EXIT_PERMISSION_DENIED"
     fi
 
 }
@@ -122,7 +122,7 @@ install_application() {
 
     log_info "Copying project..."
 
-    safe_remove "$INSTALL_DIR"
+    safe_remove "$INSTALL_DIR" || return "$EXIT_FAILURE"
 
     mkdir -p "$INSTALL_DIR"
 
@@ -132,6 +132,41 @@ install_application() {
         --exclude-from="$INSTALL_IGNORE" \
         "$PROJECT_ROOT/" \
         "$INSTALL_DIR/"
+
+}
+
+update_application() {
+
+    local STAGING_DIR="$T_DIR/application"
+
+    [[ -n "$T_DIR" && -d "$T_DIR" ]] || {
+        log_error "No active update transaction."
+        return "$EXIT_FAILURE"
+    }
+
+    # An installed `labctl update` runs from INSTALL_DIR, so stage the source
+    # before replacing that directory.
+    mkdir -p "$STAGING_DIR" || return "$EXIT_FAILURE"
+
+    rsync \
+        -a \
+        --delete \
+        --exclude-from="$INSTALL_IGNORE" \
+        "$PROJECT_ROOT/" \
+        "$STAGING_DIR/" || return "$EXIT_FAILURE"
+
+    safe_remove "$INSTALL_DIR" || return "$EXIT_FAILURE"
+    mkdir -p "$INSTALL_DIR" || return "$EXIT_FAILURE"
+
+    rsync -a --delete "$STAGING_DIR/" "$INSTALL_DIR/"
+
+}
+
+settings_migrate() {
+
+    # Keep user-managed configuration intact. New defaults are deliberately
+    # not merged implicitly because values may contain local network details.
+    settings_create
 
 }
 
@@ -161,14 +196,7 @@ install_application() {
 
 install_launcher() {
 
-cat > "$BIN_LINK" <<EOF
-#!/usr/bin/env bash
-
-exec "$INSTALL_DIR/bin/labctl" "\$@"
-
-EOF
-
-    chmod 755 "$BIN_LINK"
+    launcher_install
 
 }
 
@@ -418,7 +446,113 @@ verify_summary() {
 
 }
 
-#!/bin/bash
+###############################################################################
+# Validate supported operating system.
+###############################################################################
+
+_validate_os() {
+
+    [[ "$OSTYPE" == linux* ]] && return 0
+
+    log_error "Unsupported operating system."
+
+    log_info "LABCTL currently supports Linux only."
+
+    return 1
+
+}
+
+validate_environment() {
+
+    _validate_os || return 1
+
+    _validate_commands || return 1
+
+    _validate_directories || return 1
+
+    _validate_permissions || return 1
+
+    _validate_networkmanager || return 1
+
+}
+
+###############################################################################
+# Validate required system commands.
+###############################################################################
+
+_validate_commands() {
+
+    local commands=(
+        ip
+        nmcli
+        awk
+        grep
+        sed
+        cut
+        tr
+        date
+        find
+        mkdir
+        touch
+    )
+
+    local command
+
+    for command in "${commands[@]}"; do
+
+        command -v "$command" >/dev/null 2>&1 || {
+
+            log_error "Missing required command: $command"
+
+            return 1
+
+        }
+
+    done
+
+}
+
+###############################################################################
+# Validate required directories.
+###############################################################################
+
+_validate_directories() {
+
+    [[ -d "$LOG_DIR" ]] && return 0
+
+    log_error "Missing directory: $LOG_DIR"
+
+    return 1
+
+}
+
+###############################################################################
+# Validate required permissions.
+###############################################################################
+
+_validate_permissions() {
+
+    [[ -w "$LOG_DIR" ]] && return 0
+
+    log_error "Log directory is not writable."
+
+    return 1
+
+}
+
+###############################################################################
+# Validate NetworkManager.
+###############################################################################
+
+_validate_networkmanager() {
+
+    systemctl is-active --quiet NetworkManager && return 0
+
+    log_error "NetworkManager is not running."
+
+    return 1
+
+}
 
 ###############################################################################
 # USE LATER

@@ -4,27 +4,23 @@
 # LAB CACHE ENGINE
 ###############################################################################
 
-CACHE_DIR="/var/cache/labctl"
+lab_cache_file() {
 
-mkdir -p "$CACHE_DIR"
-
-cache_file() {
-
-    echo "$CACHE_DIR/$1"
+    printf '%s/lab-%s\n' "$CACHE_DIR" "$1"
 
 }
 
-cache_exists() {
+lab_cache_exists() {
 
-    [[ -f "$(cache_file "$1")" ]]
+    [[ -f "$(lab_cache_file "$1")" ]]
 
 }
 
-cache_age() {
+lab_cache_age() {
 
     local FILE
 
-    FILE=$(cache_file "$1")
+    FILE=$(lab_cache_file "$1")
 
     [[ -f "$FILE" ]] || return 1
 
@@ -32,24 +28,25 @@ cache_age() {
 
 }
 
-cache_read() {
+lab_cache_read() {
 
-    cat "$(cache_file "$1")"
+    cat "$(lab_cache_file "$1")"
 
 }
 
-cache_write() {
+lab_cache_write() {
 
     local NAME="$1"
 
     shift
 
-    printf "%s\n" "$@" > "$(cache_file "$NAME")"
+    mkdir -p "$CACHE_DIR" || return 1
+    printf "%s\n" "$@" > "$(lab_cache_file "$NAME")"
 
 }
 
-cache_clear() {
+lab_cache_clear() {
 
-    rm -f "$CACHE_DIR"/*
+    rm -f "$CACHE_DIR"/lab-*
 
 }

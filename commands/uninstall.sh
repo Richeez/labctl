@@ -49,6 +49,8 @@ EOF
 
     done
 
+    install_assert_root || return $?
+
 
     ###########################################################################
     # Transaction
@@ -91,7 +93,7 @@ EOF
 
         UNINSTALL_STEPS+=(
             "Clearing logs:logs_clear"
-            "Removing configuration:config_remove"
+            "Removing configuration:install_config_remove"
         )
 
     fi

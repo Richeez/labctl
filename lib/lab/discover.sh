@@ -8,26 +8,42 @@
 
 discover_network(){
 
-local IFACE
+    local IFACE SUBNET OUTPUT IP HOST MAC
 
-IFACE=$(default_interface)
+    IFACE="$(network_default_interface)"
+    [[ -n "$IFACE" ]] || {
+        log_error "No default network interface is available."
+        return 1
+    }
 
-local SUBNET
+    SUBNET="$(interface_cidr "$IFACE" | head -n1)"
+    [[ -n "$SUBNET" ]] || {
+        log_error "Unable to determine the subnet for '$IFACE'."
+        return 1
+    }
 
-SUBNET=$(interface_cidr "$IFACE")
+    init_inventory || return 1
+    log_info "Discovering hosts on $SUBNET..."
 
-SCAN_DIR="/var/lib/labctl/scans"
+    OUTPUT="$(nmap -sn -oG - "$SUBNET")" || return 1
 
-mkdir -p "$SCAN_DIR"
+    while IFS=$'\t' read -r IP HOST MAC; do
+        [[ -n "$IP" ]] || continue
+        inventory_add "$IP" "$MAC" "$HOST" "unknown" || return 1
+    done < <(
+        awk '/Status: Up/ {
+            ip=$2; host=$3; sub(/\(.*/, "", host)
+            mac=""
+            if (index($0, "MAC Address: ")) {
+                split($0, fields, "MAC Address: ")
+                split(fields[2], mac_fields, " ")
+                mac=mac_fields[1]
+            }
+            print ip "\t" host "\t" mac
+        }' <<< "$OUTPUT"
+    )
 
-local XML="$SCAN_DIR/discovery.xml"
-
-nmap \
-    -sn \
-    -oX "$XML" \
-    "$SUBNET"
-
-parse_discovery "$XML"
+    inventory_list
 
 }
 # discover_network() {

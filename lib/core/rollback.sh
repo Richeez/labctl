@@ -20,7 +20,17 @@ rollback_transaction() {
 
     fi
 
-    log_info "No rollback actions registered."
+    if [[ -d "$TRANSACTION_DIR/backup/application" ]]; then
+        log_info "Restoring application backup..."
+        rm -rf "$INSTALL_DIR" || return "$EXIT_FAILURE"
+        cp -a "$TRANSACTION_DIR/backup/application" "$INSTALL_DIR" || return "$EXIT_FAILURE"
+    fi
+
+    if [[ -f "$TRANSACTION_DIR/backup/config.conf" ]]; then
+        log_info "Restoring configuration backup..."
+        mkdir -p "$CONFIG_DIR" || return "$EXIT_FAILURE"
+        cp -a "$TRANSACTION_DIR/backup/config.conf" "$CONFIG_FILE" || return "$EXIT_FAILURE"
+    fi
 
     return 0
 

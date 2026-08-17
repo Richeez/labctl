@@ -3,11 +3,34 @@
 set -Eeuo pipefail
 
 
+
+###############################################################################
+# Resolve LABCTL installation root
+###############################################################################
+
+SOURCE="${BASH_SOURCE[0]}"
+
+while [[ -L "$SOURCE" ]]; do
+
+    DIRECTORY="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+
+    SOURCE="$(readlink "$SOURCE")"
+
+    [[ "$SOURCE" != /* ]] && \
+        SOURCE="$DIRECTORY/$SOURCE"
+
+done
+
+LABCTL_BIN_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+LABCTL_HOME="$(cd "$LABCTL_BIN_DIR/.." && pwd)"
+
+export LABCTL_HOME
+
+
 ###############################################################################
 # Bootstrap
-###############################################################################
-# source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib/core" && pwd)/home.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/../lib/core/home.sh"
+##############################################################################
+# source "$(dirname "${BASH_SOURCE[0]}")/../lib/core/home.sh"
 source "$LABCTL_HOME/lib/core/bootstrap.sh"
 
 ###############################################################################
@@ -101,28 +124,6 @@ load_command() {
 
 }
 
-# load_command() {
-
-#     local command="$1"
-#     local file="$COMMAND_DIR/${command}.sh"
-
-#     if [[ ! -f "$file" ]]; then
-#         log_error "Unknown command: $command"
-#         echo
-#         help
-#         return "$EXIT_INVALID_ARGUMENT"
-#     fi
-
-#     unset -f run 2>/dev/null || true
-
-#     source "$file"
-
-#     if ! declare -F run >/dev/null; then
-#         log_error "Command '$command' does not define run()."
-#         exit 1
-#     fi
-
-# }
 
 ###############################################################################
 # Built-in Commands
@@ -146,32 +147,36 @@ LABCTL v${VERSION}
 Usage:
     labctl <command>
 
-Commands
+Network modes (root required)
 
-    help        Show this help
-    version     Show version
+    network <mode>  Switch mode: internet, contain, lab, or bridged
+    net [mode]      Network-mode alias; defaults to internet/NAT
+    contain         Containment mode (legacy shortcut)
+    lab             Internal lab (legacy shortcut)
+    bridged         Bridged mode (legacy shortcut; confirmation required)
+
+Operations
+
     status      Show network status
     doctor      Verify networking health
     doctor --repair
-    test        Test all logics effectively
     repair
+    cache <action> Inspect or rebuild cached state
+    config <action> View or manage configuration
+    inventory, discover, report, export, vm, scan
 
-    network     Switch network mode (see: labctl network --help)
-    net         Short network-mode alias; defaults to Internet/NAT
-    contain     Containment mode (NAT Network; legacy shortcut)
-    lab         Internal lab (legacy shortcut)
-    bridged     Bridged network (legacy shortcut)
+Installation (root required)
 
-    install     Setup Labctl
-    uninstall   Remove Labctl
-    uninstall --purge
-    update      Update Labctl
-    upgrade     Update Labctl (legacy shortcut)
+    install     Install LABCTL from this checkout (see: labctl install --help)
+    uninstall   Remove LABCTL (see: labctl uninstall --help)
+    update      Refresh the installed checkout (see: labctl update --help)
+    upgrade     Update LABCTL (legacy shortcut)
 
-    cache status
-    cache clear
-    cache rebuild
+Other
 
+    version     Show version information
+    test        Run the test suite
+    help        Show this help
 
 
 Examples
@@ -180,7 +185,7 @@ Examples
     labctl doctor
     labctl network internet
     sudo labctl net
-    labctl contain
+    sudo labctl contain
 
 EOF
 
@@ -196,53 +201,6 @@ version() {
 ################################################################################
 # Main
 ###############################################################################
-
-# main() {
-
-#     local command="${1:-help}"
-
-#     case "$command" in
-
-#         help|-h|--help)
-
-#             help
-#             ;;
-
-
-#         version|-v|--version)
-
-#             version
-#             ;;
-
-
-#         install|update|uninstall|doctor|repair|cache)
-
-#             load_command "$command" || return $?
-            
-
-
-#             shift || true
-
-#             run "$@"
-
-#             ;;
-
-
-#         *)
-
-#             log_error "Unknown command: $command"
-
-#             echo
-
-#             help
-
-#             return "$EXIT_INVALID_ARGUMENT"
-
-#             ;;
-
-#     esac
-
-# }
 
 main(){
 
@@ -274,12 +232,3 @@ esac
 }
 
 main "$@"
-
-
-# set -euo pipefail
-
-# HOME="$(cd "$(dirname "$0")/.." && pwd)"
-
-# source "$HOME/lib/core/bootstrap.sh"
-
-# dispatch "$@"

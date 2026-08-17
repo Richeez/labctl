@@ -2,39 +2,9 @@
 
 set -Eeuo pipefail
 
-# LABCTL_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# export LABCTL_HOME
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib/core" && pwd)/home.sh"
-source lib/core/bootstrap.sh
-
-logo_print
-
-system_install || {
-
-    system_rollback
-
-    exit 1
-
-}
-
-ui_start "Verifying installation"
-
-system_verify
-
-ui_finish
-
-echo
-log_success "LABCTL installed successfully."
-
-# echo
-# banner
-
-echo
-echo "Run:"
-echo
-echo "labctl version"
+exec "$ROOT_DIR/bin/labctl" install "$@"
 # # ###############################################################################
 # # # LABCTL Installer
 # # ###############################################################################

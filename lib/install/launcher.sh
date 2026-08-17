@@ -14,15 +14,43 @@
 
 launcher_install() {
 
-cat > "$BIN_DIR/labctl" <<'EOF'
-#!/usr/bin/env bash
+    mkdir -p "$BIN_DIR" || {
 
-exec /opt/labctl/bin/labctl "$@"
-EOF
+        log_error "Failed to create launcher directory: $BIN_DIR"
 
-    chmod 755 "$BIN_DIR/labctl"
+        return "$EXIT_FAILURE"
 
+    }
+
+
+    if [[ -e "$BIN_LINK" || -L "$BIN_LINK" ]]; then
+
+        rm -f "$BIN_LINK" || {
+
+            log_error "Failed to remove existing launcher: $BIN_LINK"
+
+            return "$EXIT_FAILURE"
+
+        }
+
+    fi
+
+
+    filesystem_symlink \
+        "$INSTALL_DIR/bin/labctl" \
+        "$BIN_LINK" || {
+
+        log_error "Failed to create launcher: $BIN_LINK"
+
+        return "$EXIT_FAILURE"
+
+    }
+
+
+    return "$EXIT_SUCCESS"
 }
+
+
 
 launcher_remove() {
 
@@ -32,6 +60,7 @@ launcher_remove() {
 
 launcher_verify() {
 
-    filesystem_symlink "$BIN_LINK"
+    [[ -L "$BIN_LINK" ]] || return "$EXIT_FAILURE"
+    [[ "$(readlink -f "$BIN_LINK" 2>/dev/null)" == "$INSTALL_DIR/bin/labctl" ]]
 
 }

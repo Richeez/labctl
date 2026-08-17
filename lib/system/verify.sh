@@ -6,13 +6,15 @@
 
 system_verify() {
 
-    dependency_exists nmcli || return 1
-
     directory_exists "$CONFIG_DIR" || return 1
 
     directory_exists "$CACHE_DIR" || return 1
 
-    file_exists "$BIN_LINK" || return 1
+    [[ -x "$INSTALL_DIR/bin/labctl" ]] || return 1
+
+    launcher_verify || return 1
+
+    [[ -f "$CONFIG_FILE" ]] || return 1
 
     return 0
 

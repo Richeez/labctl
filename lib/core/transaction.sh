@@ -43,7 +43,7 @@ transaction_begin() {
     # Create transaction directory
     ###########################################################################
 
-    if ! mkdir -p "$T_DIR"; then
+    if ! mkdir -p "$T_DIR" "$STATE_DIR/transactions"; then
 
         log_error "Unable to create transaction directory."
 
@@ -205,6 +205,13 @@ transaction_abort() {
 
             }
 
+        fi
+
+        if [[ -L "$BIN_LINK" ]]; then
+            rm -f "$BIN_LINK" || {
+                log_error "Failed to remove incomplete launcher."
+                return "$EXIT_FAILURE"
+            }
         fi
 
     fi

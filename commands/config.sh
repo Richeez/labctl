@@ -6,8 +6,6 @@
 
 run() {
 
-    settings_init
-
     local ACTION="${1:-show}"
 
     shift || true
@@ -54,11 +52,26 @@ run() {
             config_edit
             ;;
 
+        -h|--help)
+            cat <<EOF
+Usage: labctl config <action> [arguments]
+
+Actions:
+  show | list                 Display configuration values.
+  get KEY                     Print a value.
+  set KEY VALUE               Set or add a value.
+  unset KEY                   Remove a value.
+  reset --all                 Restore shipped defaults.
+  export FILE | import FILE   Export or import configuration.
+  validate | edit             Validate or edit configuration.
+EOF
+            ;;
+
         *)
 
             log_error "Unknown configuration command."
 
-            return 1
+            return "$EXIT_INVALID_ARGUMENT"
             ;;
 
     esac

@@ -18,16 +18,7 @@ config_show() {
         "------------------------" \
         "------------------------"
 
-    local KEY
-
-    for KEY in "${!SETTINGS[@]}"
-    do
-
-        printf "%-28s %-40s\n" \
-            "$KEY" \
-            "${SETTINGS[$KEY]}"
-
-    done
+    settings_list | awk -F= '{ printf "%-28s %-40s\n", $1, substr($0, length($1) + 2) }'
 
     ui_finish
 
@@ -78,8 +69,6 @@ config_set() {
 
     settings_set "$KEY" "$VALUE"
 
-    settings_save
-
     log_success "$KEY updated."
 
 }
@@ -98,8 +87,6 @@ config_unset() {
 
     settings_unset "$KEY"
 
-    settings_save
-
     log_success "$KEY removed."
 
 }
@@ -109,7 +96,7 @@ config_reset() {
     if [[ "${1:-}" == "--all" ]]
     then
 
-        settings_reset_all
+        settings_reset
 
         log_success "Configuration reset."
 
@@ -117,11 +104,8 @@ config_reset() {
 
     fi
 
-    local KEY="$1"
-
-    settings_reset "$KEY"
-
-    log_success "$KEY reset."
+    log_error "Use 'labctl config reset --all' to restore defaults."
+    return "$EXIT_INVALID_ARGUMENT"
 
 }
 
@@ -163,18 +147,17 @@ config_import() {
 
 config_validate() {
 
-    if settings_validate
-    then
+    local KEY
+    local REQUIRED=(DEFAULT_PROFILE PING_TIMEOUT DNS_TARGET INTERNET_TARGET LOG_LEVEL)
 
-        log_success "Configuration valid."
+    for KEY in "${REQUIRED[@]}"; do
+        if ! grep -q "^${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+            log_error "Missing configuration key: $KEY"
+            return "$EXIT_CONFIGURATION_ERROR"
+        fi
+    done
 
-    else
-
-        log_error "Configuration invalid."
-
-        return 1
-
-    fi
+    log_success "Configuration valid."
 
 }
 
@@ -184,6 +167,6 @@ config_edit() {
 
     "$EDITOR_CMD" "$CONFIG_FILE"
 
-    settings_reload
+    settings_load
 
 }

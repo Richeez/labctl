@@ -1,37 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-run(){
+run() {
 
-require_root
+    case "${1:-}" in
+        kioptrix)
+            require_root || return $?
+            profile_kioptrix
+            ;;
+        metasploitable)
+            require_root || return $?
+            profile_metasploitable
+            ;;
+        -h|--help|"")
+            cat <<EOF
+Usage: sudo labctl profile <name>
 
-case "$1" in
-
-kioptrix)
-
-profile_kioptrix
-
-;;
-
-metasploitable)
-
-profile_metasploitable
-
-;;
-
-*)
-
-echo
-
-echo "Usage"
-
-echo
-
-echo "labctl profile kioptrix"
-
-echo "labctl profile metasploitable"
-
-;;
-
-esac
+Profiles:
+  kioptrix
+  metasploitable
+EOF
+            ;;
+        *)
+            log_error "Unknown lab profile: $1"
+            return "$EXIT_INVALID_ARGUMENT"
+            ;;
+    esac
 
 }

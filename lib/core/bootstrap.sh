@@ -6,6 +6,12 @@
 # Initializes the application and loads every library module.
 ###############################################################################
 
+# Allow library consumers (including tests) to source bootstrap directly.
+if [[ -z "${LABCTL_HOME:-}" ]]; then
+    # shellcheck source=home.sh
+    source "$(dirname "${BASH_SOURCE[0]}")/home.sh"
+fi
+
 ###############################################################################
 # Bootstrap Exit Codes
 ###############################################################################
@@ -142,29 +148,6 @@ load_directory() {
     return "$BOOTSTRAP_SUCCESS"
 }
 
-# load_directory() {
-
-#     local directory="$1"
-#     local file
-
-#     [[ -d "$directory" ]] || return "$EXIT_SUCCESS"
-
-#     while IFS= read -r file; do
-
-#         [[ "$file" == "$LABCTL_HOME/lib/core/bootstrap.sh" ]] && continue
-
-#         source "$file"
-
-#     done < <(
-#         find "$directory" \
-#             -maxdepth 1 \
-#             -type f \
-#             -name "*.sh" \
-#             -print |
-#         sort
-#     )
-
-# }
 
 ###############################################################################
 # Load modules
@@ -173,13 +156,16 @@ load_directory "$LABCTL_HOME/config" || return "$BOOTSTRAP_FAILURE"
 load_directory "$LABCTL_HOME/lib/ui" || return "$BOOTSTRAP_FAILURE"
 load_directory "$LABCTL_HOME/lib/core" || return "$BOOTSTRAP_FAILURE"
 load_directory "$LABCTL_HOME/lib/system" || return "$BOOTSTRAP_FAILURE"
-load_directory "$LABCTL_HOME/lib/cache" || return "$BOOTSTRAP_FAILURE"
 load_directory "$LABCTL_HOME/lib/network" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/cache" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/lab" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/providers" || return "$BOOTSTRAP_FAILURE"
+load_directory "$LABCTL_HOME/lib/services" || return "$BOOTSTRAP_FAILURE"
 load_directory "$LABCTL_HOME/lib/install" || return "$BOOTSTRAP_FAILURE"
 
 settings_load
 
-verify_install_modules || return $?
+# verify_install_modules || return $?
 
 
 mkdir -p "$LOG_DIR"

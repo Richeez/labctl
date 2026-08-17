@@ -6,20 +6,43 @@
 
 run() {
 
-    case "${1:-}" in
+    local FORCE=false
 
-        "")
-            ;;
-        --force)
-            log_error "--force is not implemented yet."
-            return "$EXIT_INVALID_ARGUMENT"
-            ;;
-        *)
-            log_error "Unknown install option: $1"
-            return "$EXIT_INVALID_ARGUMENT"
-            ;;
+    while (($#)); do
+        case "$1" in
+            --force)
+                FORCE=true
+                ;;
+            -h|--help)
+                cat <<EOF
+Usage: labctl install [--force]
 
-    esac
+Install LABCTL system-wide.
+
+Options:
+  --force       Replace an existing installation. The current configuration is preserved.
+  -h, --help    Show this help.
+
+This command requires root privileges. Run it from a LABCTL source checkout:
+  sudo ./install.sh
+EOF
+                return "$EXIT_SUCCESS"
+                ;;
+            *)
+                log_error "Unknown install option: $1"
+                return "$EXIT_INVALID_ARGUMENT"
+                ;;
+        esac
+        shift
+    done
+
+    install_assert_root || return $?
+
+    if [[ -d "$INSTALL_DIR" && "$FORCE" != true ]]; then
+        log_error "LABCTL is already installed at $INSTALL_DIR."
+        log_info "Use 'labctl update' to refresh it, or 'labctl install --force' to replace it."
+        return "$EXIT_FAILURE"
+    fi
 
 
     ###########################################################################
@@ -27,6 +50,12 @@ run() {
     ###########################################################################
 
     transaction_begin || return "$EXIT_FAILURE"
+
+    if [[ "$FORCE" == true ]] && ! backup_create; then
+        log_error "Unable to create an installation backup."
+        transaction_abort || true
+        return "$EXIT_FAILURE"
+    fi
 
 
     ###########################################################################
@@ -39,6 +68,8 @@ run() {
             log_error "Failed to commit installation."
             return "$EXIT_FAILURE"
         }
+
+        install_summary
 
         return "$EXIT_SUCCESS"
 

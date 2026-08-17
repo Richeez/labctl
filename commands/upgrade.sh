@@ -21,12 +21,30 @@ run() {
             log_info "Backup is automatically created during update."
             ;;
 
+        -h|--help)
+            cat <<EOF
+Usage: labctl update [--backup]
+
+Refresh the installed files from the current LABCTL checkout and preserve the
+existing configuration. A rollback backup is created automatically.
+
+Options:
+  --backup      Accepted for compatibility; backups are always created.
+  -h, --help    Show this help.
+EOF
+            return "$EXIT_SUCCESS"
+            ;;
+
         *)
             log_error "Unknown update option: $1"
             return "$EXIT_INVALID_ARGUMENT"
             ;;
 
     esac
+
+    install_assert_root || return $?
+
+    install_assert_installed || return $?
 
 
     ###########################################################################
@@ -61,6 +79,8 @@ run() {
             log_error "Failed to commit update."
             return "$EXIT_FAILURE"
         }
+
+        update_summary
 
         return "$EXIT_SUCCESS"
 

@@ -47,7 +47,8 @@ directories_create() {
         "$STATE_DIR" \
         "$LOG_DIR" \
         "$BACKUP_ROOT" \
-        "$TRANSACTION_DIR"
+        "$TRANSACTION_DIR"\
+        "$SNAPSHOT_DIR"
     do
 
         if [[ ! -d "$DIRECTORY" ]]; then

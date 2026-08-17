@@ -18,19 +18,19 @@ generate_report() {
 
     echo "Mode"
 
-    json_get '.mode'
+    state_profile
 
     echo
 
     echo "Interface"
 
-    default_interface
+    network_default_interface
 
     echo
 
     echo "Gateway"
 
-    default_gateway
+    network_default_gateway
 
     echo
 

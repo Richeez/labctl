@@ -6,9 +6,9 @@
 
 profile_kioptrix(){
 
-info "Preparing Kioptrix Lab..."
+log_info "Preparing Kioptrix lab..."
 
-activate_connection contain
+network_contain || return
 
 discover_network
 
@@ -18,9 +18,9 @@ generate_report
 
 profile_metasploitable(){
 
-info "Preparing Metasploitable Lab..."
+log_info "Preparing Metasploitable lab..."
 
-activate_connection contain
+network_contain || return
 
 discover_network
 

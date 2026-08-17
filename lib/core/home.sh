@@ -4,13 +4,34 @@
 # LABCTL Home
 ###############################################################################
 
-if [[ -z "${LABCTL_HOME:-}" ]]; then
+if [[ -n "${LABCTL_HOME:-}" ]]; then
+    export LABCTL_HOME
+    return 0
+fi
 
-    LABCTL_HOME="$(
-        cd "$(dirname "${BASH_SOURCE[0]}")/../.." &&
-        pwd
-    )"
+
+###############################################################################
+# Installed environment
+###############################################################################
+
+if [[ -d "/opt/labctl" ]]; then
+
+    LABCTL_HOME="/opt/labctl"
 
     export LABCTL_HOME
 
+    return 0
+
 fi
+
+
+###############################################################################
+# Development environment
+###############################################################################
+
+LABCTL_HOME="$(
+    cd "$(dirname "${BASH_SOURCE[0]}")/../.." &&
+    pwd
+)"
+
+export LABCTL_HOME
